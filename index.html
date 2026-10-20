@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Generador de Vales - Primera Mano</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#d4af37">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Vales PM">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+
+  <style>
+    :root {
+      --gold: #d4af37;
+      --gold-dark: #b8921b;
+      --gold-light: #f3e5ab;
+      --bg-dark: #0d0d0d;
+      --card-bg: #151515;
+      --input-bg: #1f1f1f;
+      --border-color: #333333;
+      --wa-green: #25D366;
+      --wa-dark: #128C7E;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: #ffffff;
+      min-height: 100vh;
+      padding-bottom: 50px;
+    }
+
+    /* Header con estilo idéntico a Primera Mano */
+    header {
+      text-align: center;
+      padding: 24px 15px 18px 15px;
+      background: linear-gradient(to right, #000000, #1a0f00, #000000);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 25px rgba(212, 175, 55, 0.35);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand-title {
+      color: var(--gold);
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .brand-subtitle {
+      color: #bbb;
+      font-size: 0.85rem;
+      margin-top: 5px;
+      font-weight: 500;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 20px 16px;
+    }
+
+    /* Botón configuración del gestor */
+    .gestor-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #181818;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .gestor-info {
+      font-size: 0.9rem;
+      color: #ddd;
+    }
+    .gestor-info strong {
+      color: var(--gold);
+    }
+
+    .btn-gestor {
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-gestor:hover {
+      background: var(--gold);
+      color: #000;
+    }
+
+    /* Pestañas selectoras de Vale */
+    .tabs-nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+
+    .tab-btn {
+      padding: 14px 10px;
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 12px;
+      color: #aaa;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      text-align: center;
+    }
+
+    .tab-btn.active-mensajeria {
+      background: linear-gradient(135deg, rgba(37, 211, 102, 0.15), rgba(18, 140, 126, 0.25));
+      border-color: var(--wa-green);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(37, 211, 102, 0.25);
+    }
+
+    .tab-btn.active-recoger {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(184, 146, 27, 0.3));
+      border-color: var(--gold);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+    }
+
+    /* Formulario */
+    .vale-card {
+      background: var(--card-bg);
+      border: 2px solid var(--gold);
+      border-radius: 18px;
+      padding: 22px 18px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .vale-header-title {
+      font-size: 1.35rem;
+      color: var(--gold);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    label {
+      color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    label .icon {
+      font-size: 1rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 10px;
+      border: 2px solid var(--border-color);
+      background: var(--input-bg);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+    }
+
+    input[readonly] {
+      background: #141414;
+      color: var(--gold);
+      font-weight: bold;
+      border-color: #444;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Pedidos dinámicos */
+    .pedidos-section {
+      background: #111;
+      border: 1px dashed rgba(212, 175, 55, 0.5);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .pedidos-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .pedidos-header h4 {
+      color: var(--gold-light);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .btn-add-item {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-add-item:hover {
+      background: var(--gold);
+      color: #000;
+    }
+
+    .pedido-item {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .pedido-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .btn-remove-item {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 68, 68, 0.15);
+      border: 1px solid #ff4444;
+      color: #ff6666;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Botón de envío */
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-size: 1.15rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      letter-spacing: 0.5px;
+      transition: transform 0.15s ease, filter 0.2s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    .btn-mensajeria {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.35);
+    }
+
+    .btn-recoger {
+      background: linear-gradient(135deg, #d4af37, #b8921b);
+      color: #000000;
+      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.35);
+    }
+
+    /* Modal emergente para Datos del Gestor */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: #141414;
+      border: 2px solid var(--gold);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      padding: 24px 20px;
+      position: relative;
+      box-shadow: 0 0 35px rgba(212, 175, 55, 0.25);
+    }
+
+    .modal-box h3 {
+      color: var(--gold);
+      margin-bottom: 16px;
+      font-size: 1.25rem;
+      text-align: center;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      color: var(--gold);
+      font-size: 1.8rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* Ayuda y banner instalable */
+    .install-banner {
+      display: none;
+      background: linear-gradient(to right, #111, #1e1e1e);
+      border: 1px solid var(--gold);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .install-banner span {
+      font-size: 0.85rem;
+      color: #eee;
+    }
+
+    .btn-install {
+      background: var(--gold);
+      color: #000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      border: 1px solid var(--gold);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      z-index: 2000;
+      display: none;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+    }
+
+    /* Modal previa de redirección */
+    .modal-confirm-content {
+      text-align: center;
+    }
+    .modal-confirm-content p {
+      margin: 12px 0 20px 0;
+      font-size: 0.95rem;
+      color: #ccc;
+      line-height: 1.4;
+    }
+    .modal-confirm-actions {
+      display: flex;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado con estilo de Primera Mano -->
+  <header>
+    <div class="brand-title">
+      <span>👑</span> PRIMERA MANO <span>👑</span>
+    </div>
+    <div class="brand-subtitle">Generador Oficial de Vales para Gestores</div>
+  </header>
+
+  <div class="container">
+
+    <!-- Banner Instalable PWA -->
+    <div id="install-banner" class="install-banner">
+      <span>📲 ¡Instala esta app en tu pantalla para usarla siempre sin internet!</span>
+      <button id="btn-install" class="btn-install">Instalar</button>
+    </div>
+
+    <!-- Barra de Configuración de Datos del Gestor -->
+    <div class="gestor-bar">
+      <div class="gestor-info">
+        <div>Gestor: <strong id="lbl-gestor-nombre">No configurado</strong></div>
+        <div style="font-size:0.8rem; color:#999;" id="lbl-gestor-tel">Toca para autocompletar</div>
+      </div>
+      <button class="btn-gestor" onclick="abrirModalGestor()">⚙️ Mis Datos</button>
+    </div>
+
+    <!-- Selector de las 2 Opciones de Vales -->
+    <div class="tabs-nav">
+      <button id="tab-btn-mensajeria" class="tab-btn active-mensajeria" onclick="cambiarTipoVale('mensajeria')">
+        🚚 Mensajería
+      </button>
+      <button id="tab-btn-recoger" class="tab-btn" onclick="cambiarTipoVale('recoger')">
+        🏪 Recoger Local
+      </button>
+    </div>
+
+    <!-- ==================== OPCIÓN 1: VALE MENSAJERÍA ==================== -->
+    <div id="view-mensajeria" class="vale-card">
+      <h3 class="vale-header-title">📝 Factura (Mensajería)</h3>
+      <form id="form-mensajeria" onsubmit="event.preventDefault(); procesarEnvioMensajeria();">
+        
+        <div class="form-group">
+          <label for="m-fecha"><span class="icon">🪀</span> Fecha:</label>
+          <input type="date" id="m-fecha" required>
+        </div>
+
+        <div class="form-group">
+          <label for="m-nombre"><span class="icon">🪀</span> Nombre del Cliente:</label>
+          <input type="text" id="m-nombre" placeholder="Nombre completo" required>
+        </div>
+
+        <div class="form-group">
+          <label for="m-ci"><span class="icon">🪀</span> CI:</label>
+          <input type="text" id="m-ci" placeholder="Carnet de Identidad" required>
+        </div>
+
+        <div class="form-group">
+          <label for="m-tel"><span class="icon">🪀</span> Teléfono del Cliente:</label>
+          <input type="text" id="m-tel" placeholder="Número de contacto" required>
+        </div>
+
+        <div class="form-group">
+          <label for="m-dir"><span class="icon">🪀</span> Dirección del cliente:</label>
+          <input type="text" id="m-dir" placeholder="Dirección detallada y entrecalles" required>
+        </div>
+
+        <!-- Pedidos dinámicos -->
+        <div class="pedidos-section">
+          <div class="pedidos-header">
+            <h4>📦 Artículos a Enviar</h4>
+            <button type="button" class="btn-add-item" onclick="agregarPedidoItem('m')">+ Añadir otro</button>
+          </div>
+          <div id="m-pedidos-container">
+            <!-- Los items de pedido se generan aquí -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="m-precio"><span class="icon">🪀</span> Precio del artículo:</label>
+          <input type="text" id="m-precio" placeholder="Ej: $45 USD o 45" oninput="recalcularTotalMensajeria()" required>
+        </div>
+
+        <div class="form-group">
+          <label for="m-pago"><span class="icon">🪀</span> Método de pago:</label>
+          <select id="m-pago" required>
+            <option value="USD">USD</option>
+            <option value="Moneda nacional 10 pesos por encima del toque">Moneda nacional 10 pesos por encima del toque</option>
+            <option value="Mixta USD MN">Mixta USD MN</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label><span class="icon">🪀</span> Precio de la mensajería:</label>
+          <div class="input-row">
+            <input type="text" id="m-precio-mensajeria" placeholder="Cantidad (ej: 5)" oninput="recalcularTotalMensajeria()" required>
+            <select id="m-moneda-mensajeria" style="max-width: 120px;" onchange="recalcularTotalMensajeria()" required>
+              <option value="USD">USD</option>
+              <option value="MN">MN</option>
+              <option value="MIX">MIX</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="m-total"><span class="icon">🪀</span> Total a Recoger:</label>
+          <input type="text" id="m-total" placeholder="Total a cobrar" required>
+        </div>
+
+        <div class="form-group">
+          <label for="m-devolver"><span class="icon">🪀</span> Dinero a devolver:</label>
+          <input type="text" id="m-devolver" placeholder="Cambio o 0 si exacto" required>
+        </div>
+
+        <div class="form-group">
+          <label for="m-gestor"><span class="icon">🪀</span> Nombre del gestor:</label>
+          <input type="text" id="m-gestor" placeholder="Tu nombre" required>
+        </div>
+
+        <div class="form-group">
+          <label for="m-tel-gestor"><span class="icon">🪀</span> #De teléfono del Gestor:</label>
+          <input type="text" id="m-tel-gestor" placeholder="Tu teléfono" required>
+        </div>
+
+        <div class="form-group">
+          <label for="m-desc-gestor"><span class="icon">🪀</span> Descontar al gestor:</label>
+          <input type="text" id="m-desc-gestor" placeholder="Monto a descontar (o Ninguno / 0)" required>
+        </div>
+
+        <button type="submit" class="btn-submit btn-mensajeria">
+          📲 Enviar al Grupo de WhatsApp
+        </button>
+      </form>
+    </div>
+
+    <!-- ==================== OPCIÓN 2: VALE RECOGER EN EL LOCAL ==================== -->
+    <div id="view-recoger" class="vale-card" style="display:none;">
+      <h3 class="vale-header-title">📝 Factura (Recoger en el Local)</h3>
+      <form id="form-recoger" onsubmit="event.preventDefault(); procesarEnvioRecoger();">
+        
+        <div class="form-group">
+          <label for="r-fecha"><span class="icon">🪀</span> Fecha:</label>
+          <input type="date" id="r-fecha" required>
+        </div>
+
+        <div class="form-group">
+          <label for="r-nombre"><span class="icon">🪀</span> Nombre del Cliente:</label>
+          <input type="text" id="r-nombre" placeholder="Nombre completo" required>
+        </div>
+
+        <div class="form-group">
+          <label for="r-tel"><span class="icon">🪀</span> #De teléfono del Cliente:</label>
+          <input type="text" id="r-tel" placeholder="Número de contacto" required>
+        </div>
+
+        <!-- Pedidos dinámicos -->
+        <div class="pedidos-section">
+          <div class="pedidos-header">
+            <h4>📦 Artículos a Recoger</h4>
+            <button type="button" class="btn-add-item" onclick="agregarPedidoItem('r')">+ Añadir otro</button>
+          </div>
+          <div id="r-pedidos-container">
+            <!-- Los items de pedido se generan aquí -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="r-precio"><span class="icon">🪀</span> Precio del artículo:</label>
+          <input type="text" id="r-precio" placeholder="Ej: $45 USD o 45" oninput="document.getElementById('r-total').value = this.value" required>
+        </div>
+
+        <div class="form-group">
+          <label for="r-pago"><span class="icon">🪀</span> Método de pago:</label>
+          <select id="r-pago" required>
+            <option value="USD">USD</option>
+            <option value="Moneda nacional 10 pesos por encima del toque">Moneda nacional 10 pesos por encima del toque</option>
+            <option value="Mixta USD MN">Mixta USD MN</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="r-total"><span class="icon">🪀</span> Total a Recoger:</label>
+          <input type="text" id="r-total" placeholder="Total a pagar en el local" required>
+        </div>
+
+        <div class="form-group">
+          <label for="r-gestor"><span class="icon">🪀</span> Nombre del gestor:</label>
+          <input type="text" id="r-gestor" placeholder="Tu nombre" required>
+        </div>
+
+        <div class="form-group">
+          <label for="r-tel-gestor"><span class="icon">🪀</span> #De teléfono del Gestor:</label>
+          <input type="text" id="r-tel-gestor" placeholder="Tu teléfono" required>
+        </div>
+
+        <div class="form-group">
+          <label for="r-direccion"><span class="icon">🪀</span> Dirección del local:</label>
+          <input type="text" id="r-direccion" placeholder="Dirección del local para recoger" value="Local Central Primera Mano" required>
+        </div>
+
+        <button type="submit" class="btn-submit btn-recoger">
+          📲 Enviar al Grupo de WhatsApp
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Modal Datos del Gestor -->
+  <div id="modal-gestor" class="modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close" onclick="cerrarModalGestor()">×</button>
+      <h3>👨‍💼 Datos Fijos del Gestor</h3>
+      <p style="color:#aaa; font-size:0.85rem; margin-bottom:15px; text-align:center;">
+        Guarda tus datos una sola vez para que aparezcan automáticamente en cada vale sin tener que escribirlos.
+      </p>
+      <div class="form-group">
+        <label for="g-nombre">Nombre del gestor:</label>
+        <input type="text" id="g-nombre" placeholder="Tu nombre">
+      </div>
+      <div class="form-group">
+        <label for="g-ci"># CI del Gestor:</label>
+        <input type="text" id="g-ci" placeholder="Tu carnet">
+      </div>
+      <div class="form-group">
+        <label for="g-tel"># De teléfono del Gestor:</label>
+        <input type="text" id="g-tel" placeholder="Tu número">
+      </div>
+      <button type="button" class="btn-submit btn-recoger" onclick="guardarGestor()">
+        💾 Guardar Datos
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast notificación -->
+  <div id="notification" class="notification"></div>
+
+  <script>
+    // Enlace oficial del grupo de WhatsApp solicitado
+    const WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/Idg5ReXzDR335vztnIvMNr";
+
+    // Inicialización al cargar la página
+    document.addEventListener("DOMContentLoaded", () => {
+      // Fecha de hoy por defecto
+      const hoy = new Date().toISOString().split('T')[0];
+      document.getElementById('m-fecha').value = hoy;
+      document.getElementById('r-fecha').value = hoy;
+
+      // Cargar items iniciales
+      agregarPedidoItem('m');
+      agregarPedidoItem('r');
+
+      // Cargar gestor guardado si existe
+      cargarDatosGestorEnFormularios();
+
+      // Service Worker para soporte offline total
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+          console.log('SW registration error:', err);
+        });
+      }
+    });
+
+    // PWA Install Prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const banner = document.getElementById('install-banner');
+      if (banner) banner.style.display = 'flex';
+    });
+
+    document.getElementById('btn-install').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        document.getElementById('install-banner').style.display = 'none';
+      }
+      deferredPrompt = null;
+    });
+
+    // Alternar entre las pestañas de Mensajería y Recoger en Local
+    function cambiarTipoVale(tipo) {
+      const tabMensajeria = document.getElementById('tab-btn-mensajeria');
+      const tabRecoger = document.getElementById('tab-btn-recoger');
+      const viewMensajeria = document.getElementById('view-mensajeria');
+      const viewRecoger = document.getElementById('view-recoger');
+
+      if (tipo === 'mensajeria') {
+        tabMensajeria.className = 'tab-btn active-mensajeria';
+        tabRecoger.className = 'tab-btn';
+        viewMensajeria.style.display = 'block';
+        viewRecoger.style.display = 'none';
+      } else {
+        tabRecoger.className = 'tab-btn active-recoger';
+        tabMensajeria.className = 'tab-btn';
+        viewRecoger.style.display = 'block';
+        viewMensajeria.style.display = 'none';
+      }
+    }
+
+    // Funciones para ítems de pedidos dinámicos
+    function agregarPedidoItem(prefix) {
+      const container = document.getElementById(`${prefix}-pedidos-container`);
+      const count = container.querySelectorAll('.pedido-item').length;
+      
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'pedido-item';
+      
+      const removeBtn = count > 0 
+        ? `<button type="button" class="btn-remove-item" onclick="eliminarPedidoItem(this, '${prefix}')" title="Eliminar artículo">×</button>` 
+        : '';
+
+      itemDiv.innerHTML = `
+        ${removeBtn}
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div>
+            <label style="font-size:0.85rem;"><span class="icon">🪀</span> Pedido:</label>
+            <input type="text" class="dyn-pedido" placeholder="Nombre o detalle del producto" required style="padding:10px; font-size:0.95rem;">
+          </div>
+          <div style="width: 140px;">
+            <label style="font-size:0.85rem;"><span class="icon">🪀</span> Cantidad:</label>
+            <input type="number" class="dyn-cant" value="1" min="1" required style="padding:10px; font-size:0.95rem;">
+          </div>
+        </div>
+      `;
+      container.appendChild(itemDiv);
+    }
+
+    function eliminarPedidoItem(btn, prefix) {
+      const item = btn.closest('.pedido-item');
+      if (item) {
+        item.remove();
+      }
+    }
+
+    // Cálculo automático de total para mensajería
+    function recalcularTotalMensajeria() {
+      const precioArtStr = document.getElementById('m-precio').value;
+      const precioMenStr = document.getElementById('m-precio-mensajeria').value;
+      const monMen = document.getElementById('m-moneda-mensajeria').value;
+
+      const numArt = parseFloat(precioArtStr.replace(/[^\d.]/g, ''));
+      const numMen = parseFloat(precioMenStr.replace(/[^\d.]/g, ''));
+
+      if (!isNaN(numArt) && !isNaN(numMen)) {
+        if (monMen === 'USD') {
+          document.getElementById('m-total').value = `$${(numArt + numMen).toFixed(0)} USD`;
+        } else {
+          document.getElementById('m-total').value = `$${numArt} USD + ${numMen} ${monMen}`;
+        }
+      }
+    }
+
+    // Modal de Gestor y LocalStorage
+    function abrirModalGestor() {
+      document.getElementById('g-nombre').value = localStorage.getItem('gestor_nombre') || '';
+      document.getElementById('g-ci').value = localStorage.getItem('gestor_ci') || '';
+      document.getElementById('g-tel').value = localStorage.getItem('gestor_tel') || '';
+      document.getElementById('modal-gestor').style.display = 'flex';
+    }
+
+    function cerrarModalGestor() {
+      document.getElementById('modal-gestor').style.display = 'none';
+    }
+
+    function guardarGestor() {
+      const nombre = document.getElementById('g-nombre').value.trim();
+      const ci = document.getElementById('g-ci').value.trim();
+      const tel = document.getElementById('g-tel').value.trim();
+
+      if (nombre) localStorage.setItem('gestor_nombre', nombre);
+      if (ci) localStorage.setItem('gestor_ci', ci);
+      if (tel) localStorage.setItem('gestor_tel', tel);
+
+      cargarDatosGestorEnFormularios();
+      cerrarModalGestor();
+      mostrarToast("✅ Datos del gestor guardados.");
+    }
+
+    function cargarDatosGestorEnFormularios() {
+      const nombre = localStorage.getItem('gestor_nombre');
+      const tel = localStorage.getItem('gestor_tel');
+
+      if (nombre) {
+        document.getElementById('lbl-gestor-nombre').innerText = nombre;
+        document.getElementById('m-gestor').value = nombre;
+        document.getElementById('r-gestor').value = nombre;
+      }
+      if (tel) {
+        document.getElementById('lbl-gestor-tel').innerText = "Tel: " + tel;
+        document.getElementById('m-tel-gestor').value = tel;
+        document.getElementById('r-tel-gestor').value = tel;
+      }
+    }
+
+    function mostrarToast(mensaje) {
+      const t = document.getElementById('notification');
+      t.innerText = mensaje;
+      t.style.display = 'block';
+      setTimeout(() => {
+        t.style.display = 'none';
+      }, 3500);
+    }
+
+    // ==================== REDIRECCIÓN AL GRUPO Y COPIADO ====================
+    async function redirigirYCopiar(textoVale) {
+      // Intentar copiar al portapapeles del dispositivo
+      let copiado = false;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(textoVale);
+          copiado = true;
+        } else {
+          const textArea = document.createElement("textarea");
+          textArea.value = textoVale;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand('copy');
+          textArea.remove();
+          copiado = true;
+        }
+      } catch (err) {
+        console.warn("No se pudo copiar automáticamente:", err);
+      }
+
+      alert("✅ ¡Vale generado con éxito!\n\n📋 El texto del vale ha sido copiado al portapapeles.\nAhora serás redirigido al grupo oficial de WhatsApp para pegarlo y enviarlo.");
+      
+      // Redirigir al enlace del grupo indicado por el usuario
+      window.location.href = WHATSAPP_GROUP_LINK;
+    }
+
+    // ==================== MODELO 1: MENSAJERÍA (TEXTO EXACTO) ====================
+    function procesarEnvioMensajeria() {
+      const ids = ['m-fecha', 'm-nombre', 'm-ci', 'm-tel', 'm-dir', 'm-precio', 'm-pago', 'm-precio-mensajeria', 'm-total', 'm-devolver', 'm-gestor', 'm-tel-gestor', 'm-desc-gestor'];
+      for (let i = 0; i < ids.length; i++) {
+        const val = document.getElementById(ids[i]).value.trim();
+        if (!val) {
+          alert('⚠️ Por favor completa todos los campos del vale de mensajería.');
+          document.getElementById(ids[i]).focus();
+          return;
+        }
+      }
+
+      const pedidoItems = document.querySelectorAll('#m-pedidos-container .pedido-item');
+      let pedidosValidos = true;
+      pedidoItems.forEach(item => {
+        const p = item.querySelector('.dyn-pedido').value.trim();
+        const c = item.querySelector('.dyn-cant').value.trim();
+        if (!p || !c) pedidosValidos = false;
+      });
+
+      if (!pedidosValidos || pedidoItems.length === 0) {
+        alert('⚠️ Por favor ingresa al menos un pedido y su cantidad.');
+        return;
+      }
+
+      // Estructura extraída literalmente de Gitgut (web23456.github.io/1-Primera-Mano/)
+      let mensaje = "📝𝐅𝐚𝐜𝐭𝐮𝐫𝐚 𝐚 𝐥𝐥𝐞𝐧𝐚𝐫 𝐩𝐨𝐫 𝐥𝐨𝐬 𝐠𝐞𝐬𝐭𝐨𝐫𝐞𝐬(𝑴𝒆𝒏𝒔𝒂𝒋𝒆𝒓í𝒂)\n\n";
+      mensaje += "🪀 𝐅𝐞𝐜𝐡𝐚: " + document.getElementById("m-fecha").value + "\n";
+      mensaje += "🪀 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐂𝐥𝐢𝐞𝐧𝐭𝐞: " + document.getElementById("m-nombre").value.trim() + "\n";
+      mensaje += "🪀 CI: " + document.getElementById("m-ci").value.trim() + "\n";
+      mensaje += "🪀 𝐓𝐞𝐥é𝐟𝐨𝐧𝐨 𝐝𝐞𝐥 𝐂𝐥𝐢𝐞𝐧𝐭𝐞: " + document.getElementById("m-tel").value.trim() + "\n";
+      mensaje += "🪀 𝐃𝐢𝐫𝐞𝐜𝐜𝐢ó𝐧 𝐝𝐞𝐥 𝐜𝐥𝐢𝐞𝐧𝐭𝐞: " + document.getElementById("m-dir").value.trim() + "\n";
+      
+      pedidoItems.forEach(item => {
+        const p = item.querySelector('.dyn-pedido').value.trim();
+        const c = item.querySelector('.dyn-cant').value.trim();
+        mensaje += "🪀 𝐏𝐞𝐝𝐢𝐝𝐨: " + p + "\n";
+        mensaje += "🪀 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: " + c + "\n";
+      });
+
+      mensaje += "🪀 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞𝐥 𝐚𝐫𝐭í𝐜𝐮𝐥𝐨: " + document.getElementById("m-precio").value.trim() + "\n";
+      mensaje += "🪀 𝐌é𝐭𝐨𝐝𝐨 𝐝𝐞 𝐩𝐚𝐠𝐨: " + document.getElementById("m-pago").value + "\n";
+      mensaje += "🪀 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞 𝐥𝐚 𝐦𝐞𝐧𝐬𝐚𝐣𝐞𝐫í𝐚: " + document.getElementById("m-precio-mensajeria").value.trim() + " " + document.getElementById("m-moneda-mensajeria").value + "\n";
+      mensaje += "🪀 𝐓𝐨𝐭𝐚𝐥 𝐚 𝐑𝐞𝐜𝐨𝐣𝐞𝐫: " + document.getElementById("m-total").value.trim() + "\n";
+      mensaje += "🪀 𝐃𝐢𝐧𝐞𝐫𝐨 𝐚 𝐝𝐞𝐯𝐨𝐥𝐯𝐞𝐫: " + document.getElementById("m-devolver").value.trim() + "\n";
+      mensaje += "🪀 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐠𝐞𝐬𝐭𝐨𝐫: " + document.getElementById("m-gestor").value.trim() + "\n";
+      mensaje += "🪀 #De teléfono del Gestor: " + document.getElementById("m-tel-gestor").value.trim() + "\n";
+      mensaje += "🪀 𝐃𝐞𝐬𝐜𝐨𝐧𝐭𝐚𝐫 𝐚𝐥 𝐠𝐞𝐬𝐭𝐨𝐫: " + document.getElementById("m-desc-gestor").value.trim() + "\n";
+
+      redirigirYCopiar(mensaje);
+    }
+
+    // ==================== MODELO 2: RECOGER EN LOCAL (TEXTO EXACTO) ====================
+    function procesarEnvioRecoger() {
+      const ids = ['r-fecha', 'r-nombre', 'r-tel', 'r-precio', 'r-pago', 'r-total', 'r-gestor', 'r-tel-gestor', 'r-direccion'];
+      for (let i = 0; i < ids.length; i++) {
+        const val = document.getElementById(ids[i]).value.trim();
+        if (!val) {
+          alert('⚠️ Por favor completa todos los campos del vale de recogida en local.');
+          document.getElementById(ids[i]).focus();
+          return;
+        }
+      }
+
+      const pedidoItems = document.querySelectorAll('#r-pedidos-container .pedido-item');
+      let pedidosValidos = true;
+      pedidoItems.forEach(item => {
+        const p = item.querySelector('.dyn-pedido').value.trim();
+        const c = item.querySelector('.dyn-cant').value.trim();
+        if (!p || !c) pedidosValidos = false;
+      });
+
+      if (!pedidosValidos || pedidoItems.length === 0) {
+        alert('⚠️ Por favor ingresa al menos un pedido y su cantidad.');
+        return;
+      }
+
+      // Estructura extraída literalmente de Gitgut (web23456.github.io/1-Primera-Mano/)
+      let mensaje = "📝𝐅𝐚𝐜𝐭𝐮𝐫𝐚 𝐚 𝐥𝐥𝐞𝐧𝐚𝐫 𝐩𝐨𝐫 𝐥𝐨𝐬 𝐠𝐞𝐬𝐭𝐨𝐫𝐞𝐬 (RECOGER EN EL LOCAL)\n\n";
+      mensaje += "🪀 𝐅𝐞𝐜𝐡𝐚: " + document.getElementById("r-fecha").value + "\n";
+      mensaje += "🪀 Nombre del Cliente: " + document.getElementById("r-nombre").value.trim() + "\n";
+      mensaje += "🪀 #De teléfono del Cliente: " + document.getElementById("r-tel").value.trim() + "\n";
+      
+      pedidoItems.forEach(item => {
+        const p = item.querySelector('.dyn-pedido').value.trim();
+        const c = item.querySelector('.dyn-cant').value.trim();
+        mensaje += "🪀 𝐏𝐞𝐝𝐢𝐝𝐨: " + p + "\n";
+        mensaje += "🪀 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: " + c + "\n";
+      });
+
+      mensaje += "🪀 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞𝐥 𝐚𝐫𝐭í𝐜𝐮𝐥𝐨: " + document.getElementById("r-precio").value.trim() + "\n";
+      mensaje += "🪀 𝐌é𝐭𝐨𝐝𝐨 𝐝𝐞 𝐩𝐚𝐠𝐨: " + document.getElementById("r-pago").value + "\n";
+      mensaje += "🪀 𝐓𝐨𝐭𝐚𝐥 𝐚 𝐑𝐞𝐜𝐨𝐣𝐞𝐫: " + document.getElementById("r-total").value.trim() + "\n";
+      mensaje += "🪀 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐠𝐞𝐬𝐭𝐨𝐫: " + document.getElementById("r-gestor").value.trim() + "\n";
+      mensaje += "🪀 # De teléfono del Gestor: " + document.getElementById("r-tel-gestor").value.trim() + "\n";
+      mensaje += "\nDirección del local: " + document.getElementById("r-direccion").value.trim() + "\n";
+
+      redirigirYCopiar(mensaje);
+    }
+  </script>
+</body>
+</html>
