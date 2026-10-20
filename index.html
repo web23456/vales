@@ -43,7 +43,7 @@
     /* Header con estilo idéntico a Primera Mano */
     header {
       text-align: center;
-      padding: 22px 15px 16px 15px;
+      padding: 20px 15px 14px 15px;
       background: linear-gradient(to right, #000000, #1a0f00, #000000);
       border-bottom: 2px solid var(--gold);
       box-shadow: 0 4px 25px rgba(212, 175, 55, 0.35);
@@ -68,15 +68,102 @@
 
     .brand-subtitle {
       color: #bbb;
-      font-size: 0.85rem;
-      margin-top: 5px;
+      font-size: 0.82rem;
+      margin-top: 4px;
       font-weight: 500;
     }
 
     .container {
       max-width: 650px;
       margin: 0 auto;
-      padding: 18px 16px;
+      padding: 16px;
+    }
+
+    /* Barra de estado y actualización */
+    .update-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #111;
+      border: 1px solid #333;
+      padding: 8px 14px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      font-size: 0.8rem;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #aaa;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #888;
+    }
+    .status-dot.online {
+      background: #25D366;
+      box-shadow: 0 0 8px #25D366;
+    }
+    .status-dot.offline {
+      background: #ffaa00;
+    }
+
+    .btn-update-check {
+      background: transparent;
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      color: var(--gold);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .btn-update-check:hover {
+      background: var(--gold);
+      color: #000;
+    }
+
+    /* Banner de nueva versión detectada */
+    .new-version-banner {
+      display: none;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(18, 140, 126, 0.35));
+      border: 1px solid var(--gold);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      animation: pulseGold 2s infinite alternate;
+    }
+    @keyframes pulseGold {
+      from { box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
+      to { box-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+    }
+    .new-version-banner span {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .btn-apply-update {
+      background: var(--gold);
+      color: #000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
     /* Barra configuración del gestor */
@@ -88,7 +175,7 @@
       border: 1px solid rgba(212, 175, 55, 0.4);
       padding: 12px 16px;
       border-radius: 12px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .gestor-info {
@@ -120,7 +207,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .tab-btn {
@@ -175,7 +262,7 @@
     }
 
     .emoji-preview-badge {
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       background: #222;
       border: 1px solid var(--gold);
       border-radius: 8px;
@@ -196,7 +283,7 @@
       border: 1px solid rgba(212, 175, 55, 0.4);
       border-radius: 12px;
       padding: 14px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .nota-card label {
@@ -441,7 +528,7 @@
       border: 1px solid var(--gold);
       padding: 12px 16px;
       border-radius: 12px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
@@ -492,6 +579,23 @@
   </header>
 
   <div class="container">
+
+    <!-- Barra de Conectividad y Actualización Web -->
+    <div class="update-bar">
+      <div class="status-indicator">
+        <span id="status-dot" class="status-dot"></span>
+        <span id="status-text">Detectando conexión...</span>
+      </div>
+      <button class="btn-update-check" onclick="forzarBuscarActualizaciones()">
+        🔄 Buscar cambios
+      </button>
+    </div>
+
+    <!-- Banner si hay nueva versión lista para aplicar -->
+    <div id="new-version-banner" class="new-version-banner">
+      <span>🚀 ¡Hay una versión nueva de la app disponible!</span>
+      <button class="btn-apply-update" onclick="aplicarNuevaVersion()">Actualizar Ahora</button>
+    </div>
 
     <!-- Banner Instalable PWA -->
     <div id="install-banner" class="install-banner">
@@ -753,7 +857,7 @@
     // Enlace oficial del grupo de WhatsApp
     const WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/Idg5ReXzDR335vztnIvMNr";
 
-    // Más de 30 emojis serios, clásicos y comerciales
+    // Catálogo de emojis clásicos y serios
     const EMOJIS_CLASICOS = [
       "✨", "💫", "⭐", "🌟", "📜", "📋", "🏷️", "🔖", 
       "💼", "👑", "⚜️", "💎", "🔹", "🔸", "🔷", "🔶", 
@@ -763,6 +867,8 @@
     ];
 
     let currentEmoji = "✨";
+    let swRegistration = null;
+    let newWorkerWaiting = null;
 
     function obtenerEmojiAleatorio() {
       const idx = Math.floor(Math.random() * EMOJIS_CLASICOS.length);
@@ -789,8 +895,35 @@
       mostrarToast("Icono cambiado: " + nuevo);
     }
 
+    // Comprobar estado de conexión online/offline
+    function actualizarEstadoConexion() {
+      const dot = document.getElementById('status-dot');
+      const txt = document.getElementById('status-text');
+      if (navigator.onLine) {
+        dot.className = 'status-dot online';
+        txt.textContent = 'En línea (Actualizable)';
+      } else {
+        dot.className = 'status-dot offline';
+        txt.textContent = 'Modo 100% Sin Internet Activo';
+      }
+    }
+
+    window.addEventListener('online', () => {
+      actualizarEstadoConexion();
+      mostrarToast("🌐 Conexión detectada. Verificando si hay actualizaciones...");
+      forzarBuscarActualizaciones();
+    });
+
+    window.addEventListener('offline', () => {
+      actualizarEstadoConexion();
+      mostrarToast("📴 Modo sin internet. La aplicación sigue funcionando 100% offline.");
+    });
+
     // Inicialización al cargar la página
     document.addEventListener("DOMContentLoaded", () => {
+      // Estado de red inicial
+      actualizarEstadoConexion();
+
       // Fecha de hoy por defecto
       const hoy = new Date().toISOString().split('T')[0];
       document.getElementById('m-fecha').value = hoy;
@@ -806,13 +939,98 @@
       // Cargar gestor guardado si existe
       cargarDatosGestorEnFormularios();
 
-      // Service Worker para soporte offline total
+      // Registro inteligente del Service Worker
+      registrarServiceWorker();
+    });
+
+    // Gestión del Service Worker y Actualizaciones
+    function registrarServiceWorker() {
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(err => {
-          console.log('SW registration error:', err);
+        navigator.serviceWorker.register('sw.js').then((reg) => {
+          swRegistration = reg;
+
+          // Si ya hay un SW esperando ser activado
+          if (reg.waiting) {
+            notificarNuevaVersion(reg.waiting);
+          }
+
+          // Detectar cuando se descarga un SW nuevo
+          reg.addEventListener('updatefound', () => {
+            const installingWorker = reg.installing;
+            installingWorker.addEventListener('statechange', () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                notificarNuevaVersion(installingWorker);
+              }
+            });
+          });
+
+          // Verificar si hay actualizaciones en el servidor al abrir si está online
+          if (navigator.onLine) {
+            reg.update().catch(() => {});
+          }
+        }).catch((err) => {
+          console.warn('Error registrando Service Worker:', err);
+        });
+
+        // Recargar automáticamente cuando el nuevo Service Worker tome control
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
         });
       }
-    });
+    }
+
+    function notificarNuevaVersion(worker) {
+      newWorkerWaiting = worker;
+      const banner = document.getElementById('new-version-banner');
+      if (banner) banner.style.display = 'flex';
+      mostrarToast("✨ ¡Nueva actualización encontrada! Pulsa 'Actualizar Ahora'");
+    }
+
+    function aplicarNuevaVersion() {
+      if (newWorkerWaiting) {
+        newWorkerWaiting.postMessage({ action: 'skipWaiting' });
+      } else if (swRegistration && swRegistration.waiting) {
+        swRegistration.waiting.postMessage({ action: 'skipWaiting' });
+      } else {
+        // Forzar recarga limpiando cachés en navegador si no responde el SW
+        if ('caches' in window) {
+          caches.keys().then((names) => {
+            for (let name of names) caches.delete(name);
+            window.location.reload(true);
+          });
+        } else {
+          window.location.reload(true);
+        }
+      }
+    }
+
+    async function forzarBuscarActualizaciones() {
+      if (!navigator.onLine) {
+        alert("⚠️ No tienes conexión a internet en este momento.\nLa aplicación está funcionando con la versión guardada sin conexión.");
+        return;
+      }
+
+      mostrarToast("Buscando cambios en GitHub...");
+
+      try {
+        if (swRegistration) {
+          await swRegistration.update();
+          setTimeout(() => {
+            if (!newWorkerWaiting && (!swRegistration.waiting)) {
+              mostrarToast("✅ Ya tienes la versión más reciente instalada.");
+            }
+          }, 1200);
+        } else {
+          window.location.reload(true);
+        }
+      } catch (err) {
+        mostrarToast("No se pudo comprobar la versión.");
+      }
+    }
 
     // PWA Install Prompt
     let deferredPrompt;
@@ -1032,7 +1250,7 @@
         const p = item.querySelector('.dyn-pedido').value.trim();
         const c = item.querySelector('.dyn-cant').value.trim();
         mensaje += `${e} 𝐏𝐞𝐝𝐢𝐝𝐨: ` + p + "\n";
-        mensaje += `${e} 𝐂𝐚𝐧𝐭𝐢𝐝𝐚d: ` + c + "\n";
+        mensaje += `${e} 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: ` + c + "\n";
       });
 
       mensaje += `${e} 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞𝐥 𝐚𝐫𝐭í𝐜𝐮𝐥𝐨: ` + document.getElementById("m-precio").value.trim() + "\n";
