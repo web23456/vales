@@ -700,11 +700,11 @@
         <div class="form-group">
           <label><span class="icon-placeholder dynamic-emoji">✨</span> Precio de la mensajería:</label>
           <div class="input-row">
-            <input type="text" id="m-precio-mensajeria" placeholder="Cantidad (ej: 5 o 3000)" oninput="recalcularTotalMensajeria()" required>
+            <input type="text" id="m-precio-mensajeria" placeholder="Cantidad (ej: 2500 o 0)" oninput="recalcularTotalMensajeria()" required>
             <select id="m-moneda-mensajeria" style="max-width: 120px;" onchange="recalcularTotalMensajeria()" required>
+              <option value="CUP" selected>CUP</option>
               <option value="USD">USD</option>
               <option value="MN">MN</option>
-              <option value="CUP">CUP</option>
               <option value="MIX">MIX</option>
             </select>
           </div>
@@ -1100,7 +1100,7 @@
       }
     }
 
-    // Funciones para ítems de pedidos dinámicos
+    // Funciones para ítems de pedidos dinámicos con precio individual
     function agregarPedidoItem(prefix) {
       const container = document.getElementById(`${prefix}-pedidos-container`);
       const count = container.querySelectorAll('.pedido-item').length;
@@ -1117,11 +1117,17 @@
         <div style="display:flex; flex-direction:column; gap:8px;">
           <div>
             <label style="font-size:0.85rem;"><span class="icon-placeholder dynamic-emoji">${currentEmoji}</span> Pedido:</label>
-            <input type="text" class="dyn-pedido" placeholder="Nombre o detalle del producto" required style="padding:10px; font-size:0.95rem;">
+            <input type="text" class="dyn-pedido" placeholder="Nombre del producto" required style="padding:10px; font-size:0.95rem;">
           </div>
-          <div style="width: 140px;">
-            <label style="font-size:0.85rem;"><span class="icon-placeholder dynamic-emoji">${currentEmoji}</span> Cantidad:</label>
-            <input type="number" class="dyn-cant" value="1" min="1" required style="padding:10px; font-size:0.95rem;">
+          <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+              <label style="font-size:0.85rem;"><span class="icon-placeholder dynamic-emoji">${currentEmoji}</span> Cantidad:</label>
+              <input type="number" class="dyn-cant" value="1" min="1" oninput="recalcularPreciosYTotales('${prefix}')" required style="padding:10px; font-size:0.95rem;">
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:0.85rem;">💰 Precio c/u:</label>
+              <input type="number" class="dyn-precio-unit" placeholder="Ej: 25" step="any" oninput="recalcularPreciosYTotales('${prefix}')" style="padding:10px; font-size:0.95rem;">
+            </div>
           </div>
         </div>
       `;
@@ -1132,24 +1138,78 @@
       const item = btn.closest('.pedido-item');
       if (item) {
         item.remove();
+        recalcularPreciosYTotales(prefix);
       }
     }
 
-    // Cálculo automático de total para mensajería
-    function recalcularTotalMensajeria() {
-      const precioArtStr = document.getElementById('m-precio').value;
-      const precioMenStr = document.getElementById('m-precio-mensajeria').value;
-      const monMen = document.getElementById('m-moneda-mensajeria').value;
+    // Recalcula la suma de los precios de todos los artículos individuales y actualiza el total
+    function recalcularPreciosYTotales(prefix) {
+      const container = document.getElementById(`${prefix}-pedidos-container`);
+      let sumaUSD = 0;
+      let preciosValidos = [];
 
-      const numArt = parseFloat(precioArtStr.replace(/[^\d.]/g, ''));
-      const numMen = parseFloat(precioMenStr.replace(/[^\d.]/g, ''));
-
-      if (!isNaN(numArt) && !isNaN(numMen)) {
-        if (monMen === 'USD') {
-          document.getElementById('m-total').value = `${(numArt + numMen).toFixed(0)} USD`;
-        } else {
-          document.getElementById('m-total').value = `${numArt} USD + ${numMen} ${monMen}`;
+      container.querySelectorAll('.pedido-item').forEach(item => {
+        const cant = parseFloat(item.querySelector('.dyn-cant').value) || 1;
+        const pUnit = parseFloat(item.querySelector('.dyn-precio-unit').value) || 0;
+        if (pUnit > 0) {
+          sumaUSD += (cant * pUnit);
+          preciosValidos.push(pUnit);
         }
+      });
+
+      const campoPrecioArt = document.getElementById(`${prefix}-precio`);
+      if (sumaUSD > 0) {
+        if (preciosValidos.length > 1) {
+          // Mostrar desglose y total sumado
+          campoPrecioArt.value = preciosValidos.join(', ') + ' (Total: ' + sumaUSD + ' USD)';
+        } else {
+          campoPrecioArt.value = sumaUSD + ' USD';
+        }
+      }
+
+      if (prefix === 'm') {
+        recalcularTotalMensajeria();
+      } else {
+        document.getElementById('r-total').value = sumaUSD > 0 ? (sumaUSD + ' USD') : campoPrecioArt.value;
+      }
+    }
+
+    // Cálculo automático de total para mensajería (Separa Dólar de CUP sin mezclarlos)
+    function recalcularTotalMensajeria() {
+      const container = document.getElementById('m-pedidos-container');
+      let sumaArtUSD = 0;
+
+      container.querySelectorAll('.pedido-item').forEach(item => {
+        const cant = parseFloat(item.querySelector('.dyn-cant').value) || 1;
+        const pUnit = parseFloat(item.querySelector('.dyn-precio-unit').value) || 0;
+        sumaArtUSD += (cant * pUnit);
+      });
+
+      // Si no hay precios en los items individuales, intentar leer el campo de precio general
+      if (sumaArtUSD === 0) {
+        const precioArtStr = document.getElementById('m-precio').value;
+        const numArt = parseFloat(precioArtStr.replace(/[^\d.]/g, ''));
+        if (!isNaN(numArt)) sumaArtUSD = numArt;
+      }
+
+      const precioMenStr = document.getElementById('m-precio-mensajeria').value.trim();
+      const monMen = document.getElementById('m-moneda-mensajeria').value;
+      const numMen = parseFloat(precioMenStr.replace(/[^\d.]/g, '')) || 0;
+
+      const campoTotal = document.getElementById('m-total');
+
+      if (sumaArtUSD > 0 && numMen > 0) {
+        if (monMen === 'USD') {
+          // Ambos en USD -> se pueden sumar aritméticamente
+          campoTotal.value = `${sumaArtUSD + numMen} USD`;
+        } else {
+          // Monedas distintas (Dólares y CUP/MN) -> Se muestran claramente separados
+          campoTotal.value = `${sumaArtUSD} USD más ${numMen} ${monMen}`;
+        }
+      } else if (sumaArtUSD > 0 && numMen === 0) {
+        campoTotal.value = `${sumaArtUSD} USD`;
+      } else if (sumaArtUSD === 0 && numMen > 0) {
+        campoTotal.value = `${numMen} ${monMen}`;
       }
     }
 
@@ -1769,6 +1829,19 @@
         asignacionCantidades = listaCantidades;
       }
 
+      // Extracción de precios individuales por producto
+      let listaPreciosExtraidos = [];
+      if (valPrecioArt) {
+        let cleanPrecios = valPrecioArt.replace(/usd|cup|mn|\$/gi, ' ').trim();
+        let tokens = cleanPrecios.split(/[,\n]+/).map(t => t.trim()).filter(Boolean);
+        tokens.forEach(tok => {
+          tok.split(/\s+/).filter(Boolean).forEach(s => {
+            let n = parseFloat(s);
+            if (!isNaN(n)) listaPreciosExtraidos.push(n);
+          });
+        });
+      }
+
       listaArticulos.forEach((art, idx) => {
         agregarPedidoItem(pref);
         const itemsDom = pedContainer.querySelectorAll('.pedido-item');
@@ -1780,11 +1853,17 @@
           } else {
             ultimo.querySelector('.dyn-cant').value = '1';
           }
+          // Asignar precio individual al producto si está disponible
+          if (listaPreciosExtraidos[idx]) {
+            ultimo.querySelector('.dyn-precio-unit').value = listaPreciosExtraidos[idx];
+          }
         }
       });
 
-      if (valPrecioArt) {
-        document.getElementById(`${pref}-precio`).value = valPrecioArt;
+      // Recalcular suma total de productos
+      recalcularPreciosYTotales(pref);
+      if (listaPreciosExtraidos.length > 1) {
+        log.push(`Precios individuales asignados y sumados automáticamente (${listaPreciosExtraidos.join(' + ')} USD)`);
       }
 
       // Método de pago selector
@@ -1803,20 +1882,34 @@
       if (tipoVale === 'mensajeria') {
         if (valDirCliente) document.getElementById('m-dir').value = valDirCliente;
         
-        // Precio y moneda de mensajería
+        // Precio y moneda de mensajería (por defecto en CUP)
         if (valPrecioMen) {
-          let numMen = valPrecioMen.match(/\d[\d\s.,]*/);
-          if (numMen) {
-            document.getElementById('m-precio-mensajeria').value = numMen[0].replace(/\s+/g, '');
-          }
-          if (/cup|mn/i.test(valPrecioMen)) {
+          if (/no|ninguno|0/i.test(valPrecioMen.trim())) {
+            document.getElementById('m-precio-mensajeria').value = '0';
             document.getElementById('m-moneda-mensajeria').value = 'CUP';
-          } else if (/usd/i.test(valPrecioMen)) {
-            document.getElementById('m-moneda-mensajeria').value = 'USD';
+          } else {
+            let numMen = valPrecioMen.match(/\d[\d\s.,]*/);
+            if (numMen) {
+              document.getElementById('m-precio-mensajeria').value = numMen[0].replace(/\s+/g, '');
+            }
+            if (/usd/i.test(valPrecioMen)) {
+              document.getElementById('m-moneda-mensajeria').value = 'USD';
+            } else {
+              document.getElementById('m-moneda-mensajeria').value = 'CUP';
+            }
           }
+        } else {
+          document.getElementById('m-moneda-mensajeria').value = 'CUP';
         }
 
-        if (valTotal) document.getElementById('m-total').value = valTotal;
+        recalcularTotalMensajeria();
+        if (valTotal) {
+          // Si el total extraído ya tiene desglose válido, respetarlo si coincide, o actualizar
+          let totActual = document.getElementById('m-total').value;
+          if (!totActual || totActual === '0 USD') {
+            document.getElementById('m-total').value = valTotal;
+          }
+        }
         document.getElementById('m-devolver').value = valDevolver;
         if (valDescGestor) document.getElementById('m-desc-gestor').value = valDescGestor;
       } else {
