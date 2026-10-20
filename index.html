@@ -1644,26 +1644,129 @@
         document.getElementById(`${pref}-tel`).value = valTelCliente;
       }
 
-      // Artículos / Pedidos: separar si vienen múltiples artículos por comas o saltos
+      // Artículos / Pedidos: Segmentación inteligente con catálogo oficial de Primera Mano
       const pedContainer = document.getElementById(`${pref}-pedidos-container`);
       pedContainer.innerHTML = '';
 
-      let listaArticulos = [];
-      if (valPedido.includes(',') || valPedido.includes('\n')) {
-        let rawParts = valPedido.split(/[,\n]/).map(p => p.trim()).filter(p => p.length > 0);
-        listaArticulos = rawParts;
-        log.push(`Detectados múltiples artículos en el pedido (${listaArticulos.length})`);
-      } else if (valPedido) {
-        listaArticulos = [valPedido];
-      } else {
-        listaArticulos = ['Artículo'];
+      // Catálogo oficial de artículos ordenado por especificidad
+      const CATALOGO_ARTICULOS = [
+        'ventilador de pedestal',
+        'ventilador de pared',
+        'ventilador de mesa',
+        'ventilador mini ciclon',
+        'ventilador mini ciclón',
+        'ventilador',
+        'olla arrocera',
+        'olla reina',
+        'arrocera',
+        'cocina infrarroja',
+        'fogon infrarrojo',
+        'fogón infrarrojo',
+        'infrarroja',
+        'batidora',
+        'cafetera'
+      ];
+
+      function segmentarArticulos(texto) {
+        if (!texto) return ['Artículo'];
+        let clean = texto.trim();
+
+        // 1. Separar por saltos de línea o comas
+        let partesIniciales = clean.split(/\r?\n|[,\t]/)
+                                   .map(p => p.trim())
+                                   .filter(p => p.length > 0);
+
+        let articulosFinales = [];
+
+        partesIniciales.forEach(parte => {
+          let subpartes = [parte];
+
+          // Separar por " y " o " + " si no es combo
+          if (!/^\s*un\s+combo\b/i.test(parte) && /\s+(?:y|\+)\s+/i.test(parte)) {
+            subpartes = parte.split(/\s+(?:y|\+)\s+/i)
+                             .map(s => s.trim())
+                             .filter(s => s.length > 0);
+          }
+
+          subpartes.forEach(sub => {
+            // Detección de múltiples artículos pegados sin separador (ej: "ventilador de pedestal ventilador de pared")
+            let matches = [];
+            CATALOGO_ARTICULOS.forEach(catItem => {
+              let regex = new RegExp('\\b' + catItem.replace(/\s+/g, '\\s+') + '\\b', 'gi');
+              let m;
+              while ((m = regex.exec(sub)) !== null) {
+                matches.push({
+                  index: m.index,
+                  length: m[0].length,
+                  term: catItem
+                });
+              }
+            });
+
+            if (matches.length > 1) {
+              matches.sort((a, b) => a.index - b.index);
+              let filtered = [];
+              let lastEnd = -1;
+              for (let match of matches) {
+                if (match.index >= lastEnd) {
+                  filtered.push(match);
+                  lastEnd = match.index + match.length;
+                }
+              }
+
+              if (filtered.length > 1) {
+                for (let i = 0; i < filtered.length; i++) {
+                  let start = filtered[i].index;
+                  let prefixMatch = sub.substring(0, start).match(/(?:^|\s)(\d+)\s*$/);
+                  if (prefixMatch) {
+                    start -= prefixMatch[0].length;
+                    if (start < 0) start = 0;
+                  }
+                  let end = (i < filtered.length - 1) ? filtered[i + 1].index : sub.length;
+                  let nextPrefixMatch = sub.substring(start, end).match(/\s+(\d+)\s*$/);
+                  if (nextPrefixMatch && i < filtered.length - 1) {
+                    end -= nextPrefixMatch[0].length;
+                  }
+
+                  let seg = sub.substring(start, end).trim()
+                               .replace(/^(?:y|\+|\,)\s*/i, '')
+                               .replace(/\s*(?:y|\+|\,)$/i, '')
+                               .trim();
+                  if (seg) articulosFinales.push(seg);
+                }
+                return;
+              }
+            }
+
+            articulosFinales.push(sub);
+          });
+        });
+
+        return articulosFinales.length > 0 ? articulosFinales : [clean];
       }
 
-      // Cantidades
+      let listaArticulos = segmentarArticulos(valPedido);
+      if (listaArticulos.length > 1) {
+        log.push(`Detectados y separados ${listaArticulos.length} artículos en el pedido`);
+      }
+
+      // Cantidades: extraer lista de números
       let listaCantidades = [];
       if (valCantidad) {
         let cParts = valCantidad.split(/[,y\s]+/).filter(x => /^\d+$/.test(x));
         listaCantidades = cParts;
+      }
+
+      // Si la cantidad total declarada coincide con el número de artículos separados y solo había un número (ej: Cantidad: 2 para 2 artículos)
+      let asignacionCantidades = [];
+      if (listaCantidades.length === listaArticulos.length) {
+        asignacionCantidades = listaCantidades;
+      } else if (listaCantidades.length === 1 && parseInt(listaCantidades[0]) === listaArticulos.length && listaArticulos.length > 1) {
+        // Ejemplo: Cantidad: 2 y 2 artículos -> Cada uno es cantidad 1
+        asignacionCantidades = listaArticulos.map(() => '1');
+        log.push(`Cantidad total distribuida: 1 para cada uno de los ${listaArticulos.length} artículos`);
+      } else {
+        asignacionCantidades = listaCantidades;
       }
 
       listaArticulos.forEach((art, idx) => {
@@ -1672,8 +1775,10 @@
         const ultimo = itemsDom[itemsDom.length - 1];
         if (ultimo) {
           ultimo.querySelector('.dyn-pedido').value = art;
-          if (listaCantidades[idx]) {
-            ultimo.querySelector('.dyn-cant').value = listaCantidades[idx];
+          if (asignacionCantidades[idx]) {
+            ultimo.querySelector('.dyn-cant').value = asignacionCantidades[idx];
+          } else {
+            ultimo.querySelector('.dyn-cant').value = '1';
           }
         }
       });
