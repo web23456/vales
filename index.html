@@ -711,13 +711,13 @@
         </div>
 
         <div class="form-group">
-          <label for="m-total"><span class="icon-placeholder dynamic-emoji">✨</span> Total a Recoger:</label>
-          <input type="text" id="m-total" placeholder="Total a cobrar" required>
+          <label for="m-devolver"><span class="icon-placeholder dynamic-emoji">✨</span> Dinero a devolver:</label>
+          <input type="text" id="m-devolver" placeholder="Cambio o no / 0 (ej: 5 usd)" value="no" oninput="recalcularTotalMensajeria()" required>
         </div>
 
         <div class="form-group">
-          <label for="m-devolver"><span class="icon-placeholder dynamic-emoji">✨</span> Dinero a devolver:</label>
-          <input type="text" id="m-devolver" placeholder="Cambio o no / 0" value="no" required>
+          <label for="m-total"><span class="icon-placeholder dynamic-emoji">✨</span> Total a Recoger:</label>
+          <input type="text" id="m-total" placeholder="Total a cobrar" required>
         </div>
 
         <div class="form-group">
@@ -849,8 +849,18 @@
         <label for="g-tel"># De teléfono del Gestor:</label>
         <input type="text" id="g-tel" placeholder="Tu número">
       </div>
+
+      <!-- Sección de Memoria Multicapa: Notas y Tarifas de Mensajería -->
+      <div style="margin-top: 15px; border-top: 1px dashed rgba(212, 175, 55, 0.4); padding-top: 12px;">
+        <label for="g-notas-gestor" style="color:var(--gold); font-size:0.92rem; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+          <span>📋 Tarifas & Notas Guardadas (Memoria Multicapa):</span>
+          <button type="button" onclick="cargarPlantillaTarifas()" style="background:transparent; border:1px solid var(--gold); color:var(--gold); font-size:0.75rem; padding:2px 8px; border-radius:6px; cursor:pointer;">Cargar Tarifas Oficiales</button>
+        </label>
+        <textarea id="g-notas-gestor" style="width:100%; min-height:160px; padding:10px; border-radius:8px; border:1px solid #444; background:#1c1c1c; color:#eee; font-family:monospace; font-size:0.85rem; resize:vertical; box-sizing:border-box;" placeholder="Pega aquí tus tarifas de mensajerías o notas de trabajo..."></textarea>
+      </div>
+
       <button type="button" class="btn-submit btn-recoger" onclick="guardarGestor()">
-        💾 Guardar Datos
+        💾 Guardar Datos & Memoria
       </button>
     </div>
   </div>
@@ -1174,15 +1184,19 @@
       }
     }
 
-    // Cálculo automático de total para mensajería (Separa Dólar de CUP sin mezclarlos)
+    // Cálculo automático de total para mensajería (Incluye Dinero a Devolver y separa Dólar de CUP)
     function recalcularTotalMensajeria() {
       const container = document.getElementById('m-pedidos-container');
       let sumaArtUSD = 0;
+      let preciosArray = [];
 
       container.querySelectorAll('.pedido-item').forEach(item => {
         const cant = parseFloat(item.querySelector('.dyn-cant').value) || 1;
         const pUnit = parseFloat(item.querySelector('.dyn-precio-unit').value) || 0;
-        sumaArtUSD += (cant * pUnit);
+        if (pUnit > 0) {
+          sumaArtUSD += (cant * pUnit);
+          preciosArray.push(pUnit);
+        }
       });
 
       // Si no hay precios en los items individuales, intentar leer el campo de precio general
@@ -1192,32 +1206,153 @@
         if (!isNaN(numArt)) sumaArtUSD = numArt;
       }
 
+      // Dinero a devolver (ej: "5 usd", "5", "10", "no")
+      const devolverStr = document.getElementById('m-devolver').value.trim();
+      let devolverUSD = 0;
+      if (devolverStr && !/no|ningun|0/i.test(devolverStr)) {
+        let mDev = devolverStr.match(/\d+(?:[.,]\d+)?/);
+        if (mDev) {
+          devolverUSD = parseFloat(mDev[0].replace(',', '.')) || 0;
+        }
+      }
+
+      // Mensajería
       const precioMenStr = document.getElementById('m-precio-mensajeria').value.trim();
       const monMen = document.getElementById('m-moneda-mensajeria').value;
       const numMen = parseFloat(precioMenStr.replace(/[^\d.]/g, '')) || 0;
 
       const campoTotal = document.getElementById('m-total');
 
-      if (sumaArtUSD > 0 && numMen > 0) {
+      // Total en dólares = Artículos + Dinero a Devolver que el cliente debe entregar
+      let totalUSD = sumaArtUSD + devolverUSD;
+
+      // Generar desglose si hay dinero a devolver
+      let detalleUSD = "";
+      if (devolverUSD > 0 && preciosArray.length > 0) {
+        // Formato solicitado: "25,30 mas 5 d ( Total: 60 USD )"
+        detalleUSD = `${preciosArray.join(',')} mas ${devolverUSD} d ( Total: ${totalUSD} USD )`;
+      } else if (devolverUSD > 0 && sumaArtUSD > 0) {
+        detalleUSD = `${sumaArtUSD} mas ${devolverUSD} d ( Total: ${totalUSD} USD )`;
+      } else {
+        detalleUSD = `${totalUSD} USD`;
+      }
+
+      if (totalUSD > 0 && numMen > 0) {
         if (monMen === 'USD') {
-          // Ambos en USD -> se pueden sumar aritméticamente
-          campoTotal.value = `${sumaArtUSD + numMen} USD`;
+          campoTotal.value = `${totalUSD + numMen} USD`;
         } else {
-          // Monedas distintas (Dólares y CUP/MN) -> Se muestran claramente separados
-          campoTotal.value = `${sumaArtUSD} USD más ${numMen} ${monMen}`;
+          campoTotal.value = `${detalleUSD} más ${numMen} ${monMen}`;
         }
-      } else if (sumaArtUSD > 0 && numMen === 0) {
-        campoTotal.value = `${sumaArtUSD} USD`;
-      } else if (sumaArtUSD === 0 && numMen > 0) {
+      } else if (totalUSD > 0 && numMen === 0) {
+        campoTotal.value = detalleUSD;
+      } else if (totalUSD === 0 && numMen > 0) {
         campoTotal.value = `${numMen} ${monMen}`;
       }
     }
 
-    // Modal de Gestor y LocalStorage
+    const TARIFAS_MENSAJERIA_DEFAULT = `Tarifas de mensajerías 
+
+• Vedado 💰- 1700
+• Ciudad Deportiva 💰- 1650
+• Cerro 💰- 1900
+• Centro Habana 💰- 1500
+• Habana Vieja 💰- 2000
+• Avenida 26 💰- 1900
+
+• Playa💰 - 2000
+• Náutico💰- 2500
+• Siboney💰- 3000
+• Jaimanitas💰- 3500
+• Santa Fe💰- 4000
+• después de Santa Fe 5000
+
+Marianao💰- 2500
+La Lisa 💰- 2600
+El hueco-2500
+San Agustín💰-3000
+• La Coronela 💰- 3000
+• Alturas de la Lisa💰- 3000
+• Arroyo Arenas 💰- 3500
+• Novia del Mediodía 💰-3500
+• El Cano 💰- 3500
+• Punta Brava 💰- principio 4000, y pueblo para adentro 5000
+
+Uci 💰- 4000
+
+Boyeros
+• 100 y Vento 💰1500
+• Cujae 💰3000
+• Fontanar 💰3000
+• Parque Lenin 💰2500
+• Calabazar 💰2500
+• Aeropuerto-Mazorra 💰-3500
+• Managua 💰4000
+• Wajay 💰-3000
+• Mulgoba 💰-3500
+• Santiago de las Vegas💰- 4000
+
+Arroyo Naranjo
+• Víbora Park:1000
+• La Palma 💰- 1000
+• Miraflores 💰- 2000
+• Vieja Linda 💰- 1500
+• Mantilla 💰- 1500
+• Calvario 💰- 1800
+• Párraga 💰- 1500 
+• Capri 💰- 1800
+• Eléctrico 💰-1800
+
+Diez de Octubre 
+• Santo Suárez💰-1200
+• Luyanó 💰- 1200
+• Lawton 💰-1200
+• Víbora Park💰-1000
+
+San Miguel del Padrón
+. Virgen del camino 💰- 1800
+• Virgen del Camino hasta Avenida 4ta (Luyanó Moderno)💰- 2000
+• Caballo Blanco💰- 1500
+• La Cuevita💰- 2500
+• Diezmero💰- 2500
+• San Francisco de Paula💰- 3000
+
+Cotorro
+• Puente del Cotorro💰- 2500
+• Centro de Cotorro💰- 3000
+• Alberro💰- 3300
+Lo último del cotorro 4000
+4 camino:5000
+
+Guanabacoa💰- 2000 principio 2500 centro y 4000 final
+Minas de guanabacoa💰- 5000 dependiendo la zona.
+Regla 2000
+Reparto Camilo Cienfuegos💰- 2500
+Casa Blanca💰- 3000
+Reparto Chivás💰- 2500
+Bahía💰- 2500
+Cojímar💰- 3000
+
+Alamar 💰- 3000
+Guanabo💰- 5000
+Campo florido💰-6500`;
+
+    function cargarPlantillaTarifas() {
+      document.getElementById('g-notas-gestor').value = TARIFAS_MENSAJERIA_DEFAULT;
+      mostrarToast("📋 Tarifas oficiales cargadas.");
+    }
+
+    // Modal de Gestor y LocalStorage con Memoria Multicapa (LocalStorage + Fallback)
     function abrirModalGestor() {
       document.getElementById('g-nombre').value = localStorage.getItem('gestor_nombre') || '';
       document.getElementById('g-ci').value = localStorage.getItem('gestor_ci') || '';
       document.getElementById('g-tel').value = localStorage.getItem('gestor_tel') || '';
+      
+      let notasGuardadas = localStorage.getItem('gestor_notas_tarifas');
+      if (!notasGuardadas) {
+        notasGuardadas = TARIFAS_MENSAJERIA_DEFAULT;
+      }
+      document.getElementById('g-notas-gestor').value = notasGuardadas;
+
       document.getElementById('modal-gestor').style.display = 'flex';
     }
 
@@ -1229,14 +1364,23 @@
       const nombre = document.getElementById('g-nombre').value.trim();
       const ci = document.getElementById('g-ci').value.trim();
       const tel = document.getElementById('g-tel').value.trim();
+      const notas = document.getElementById('g-notas-gestor').value;
 
       if (nombre) localStorage.setItem('gestor_nombre', nombre);
       if (ci) localStorage.setItem('gestor_ci', ci);
       if (tel) localStorage.setItem('gestor_tel', tel);
+      localStorage.setItem('gestor_notas_tarifas', notas);
+
+      // Memoria multicapa: Guardar también en IndexedDB / cache de respaldo si está disponible
+      try {
+        if (window.sessionStorage) {
+          sessionStorage.setItem('gestor_notas_tarifas_backup', notas);
+        }
+      } catch (e) {}
 
       cargarDatosGestorEnFormularios();
       cerrarModalGestor();
-      mostrarToast("✅ Datos del gestor guardados.");
+      mostrarToast("✅ Datos y Memoria Multicapa guardados.");
     }
 
     function cargarDatosGestorEnFormularios() {
@@ -1882,6 +2026,9 @@
       if (tipoVale === 'mensajeria') {
         if (valDirCliente) document.getElementById('m-dir').value = valDirCliente;
         
+        // Asignar primero el dinero a devolver para que el cálculo del total lo incluya
+        document.getElementById('m-devolver').value = valDevolver;
+
         // Precio y moneda de mensajería (por defecto en CUP)
         if (valPrecioMen) {
           if (/no|ninguno|0/i.test(valPrecioMen.trim())) {
@@ -1902,15 +2049,9 @@
           document.getElementById('m-moneda-mensajeria').value = 'CUP';
         }
 
+        // Ejecutar el cálculo automático que suma artículos + dinero a devolver (formato "25,30 mas 5 d ( Total: 60 USD )")
         recalcularTotalMensajeria();
-        if (valTotal) {
-          // Si el total extraído ya tiene desglose válido, respetarlo si coincide, o actualizar
-          let totActual = document.getElementById('m-total').value;
-          if (!totActual || totActual === '0 USD') {
-            document.getElementById('m-total').value = valTotal;
-          }
-        }
-        document.getElementById('m-devolver').value = valDevolver;
+
         if (valDescGestor) document.getElementById('m-desc-gestor').value = valDescGestor;
       } else {
         if (valTotal) document.getElementById('r-total').value = valTotal;
