@@ -43,7 +43,7 @@
     /* Header con estilo idéntico a Primera Mano */
     header {
       text-align: center;
-      padding: 24px 15px 18px 15px;
+      padding: 22px 15px 16px 15px;
       background: linear-gradient(to right, #000000, #1a0f00, #000000);
       border-bottom: 2px solid var(--gold);
       box-shadow: 0 4px 25px rgba(212, 175, 55, 0.35);
@@ -55,7 +55,7 @@
 
     .brand-title {
       color: var(--gold);
-      font-size: 1.6rem;
+      font-size: 1.55rem;
       font-weight: 800;
       letter-spacing: 2px;
       text-transform: uppercase;
@@ -76,10 +76,10 @@
     .container {
       max-width: 650px;
       margin: 0 auto;
-      padding: 20px 16px;
+      padding: 18px 16px;
     }
 
-    /* Botón configuración del gestor */
+    /* Barra configuración del gestor */
     .gestor-bar {
       display: flex;
       justify-content: space-between;
@@ -88,7 +88,7 @@
       border: 1px solid rgba(212, 175, 55, 0.4);
       padding: 12px 16px;
       border-radius: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .gestor-info {
@@ -120,7 +120,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
     .tab-btn {
@@ -166,19 +166,72 @@
     .vale-header-title {
       font-size: 1.35rem;
       color: var(--gold);
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       padding-bottom: 12px;
       border-bottom: 2px solid rgba(212, 175, 55, 0.3);
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .emoji-preview-badge {
+      font-size: 1.4rem;
+      background: #222;
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 4px 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .emoji-preview-badge span.text {
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    /* Cuadro de Nota Importante (Opcional) */
+    .nota-card {
+      background: rgba(212, 175, 55, 0.08);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+
+    .nota-card label {
+      color: #ffd966;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nota-card textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      background: #181818;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      resize: vertical;
+      min-height: 60px;
+    }
+    .nota-card textarea:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     label {
@@ -190,8 +243,11 @@
       gap: 6px;
     }
 
-    label .icon {
-      font-size: 1rem;
+    label .icon-placeholder {
+      display: inline-block;
+      width: 24px;
+      text-align: center;
+      font-size: 1.1rem;
     }
 
     input[type="text"],
@@ -233,7 +289,7 @@
       border: 1px dashed rgba(212, 175, 55, 0.5);
       border-radius: 12px;
       padding: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .pedidos-header {
@@ -378,14 +434,14 @@
       line-height: 1;
     }
 
-    /* Ayuda y banner instalable */
+    /* Banner instalable */
     .install-banner {
       display: none;
       background: linear-gradient(to right, #111, #1e1e1e);
       border: 1px solid var(--gold);
       padding: 12px 16px;
       border-radius: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
@@ -422,21 +478,6 @@
       z-index: 2000;
       display: none;
       box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-    }
-
-    /* Modal previa de redirección */
-    .modal-confirm-content {
-      text-align: center;
-    }
-    .modal-confirm-content p {
-      margin: 12px 0 20px 0;
-      font-size: 0.95rem;
-      color: #ccc;
-      line-height: 1.4;
-    }
-    .modal-confirm-actions {
-      display: flex;
-      gap: 10px;
     }
   </style>
 </head>
@@ -479,31 +520,46 @@
 
     <!-- ==================== OPCIÓN 1: VALE MENSAJERÍA ==================== -->
     <div id="view-mensajeria" class="vale-card">
-      <h3 class="vale-header-title">📝 Factura (Mensajería)</h3>
+      <div class="vale-header-title">
+        <span>📝 Factura (Mensajería)</span>
+        <div class="emoji-preview-badge" onclick="rotarEmojiAleatorio()" title="Toca para cambiar emoji">
+          <span id="badge-emoji-m">✨</span>
+          <span class="text">Aleatorio</span>
+        </div>
+      </div>
+
+      <!-- Cuadro Opcional de Nota Importante -->
+      <div class="nota-card">
+        <label for="m-nota">
+          <span>⁉️</span> Nota Importante (Opcional):
+        </label>
+        <textarea id="m-nota" placeholder="Ej: la entrega se debe de realizar después del medio día (déjalo vacío si no aplica)"></textarea>
+      </div>
+
       <form id="form-mensajeria" onsubmit="event.preventDefault(); procesarEnvioMensajeria();">
         
         <div class="form-group">
-          <label for="m-fecha"><span class="icon">🪀</span> Fecha:</label>
+          <label for="m-fecha"><span class="icon-placeholder dynamic-emoji">✨</span> Fecha:</label>
           <input type="date" id="m-fecha" required>
         </div>
 
         <div class="form-group">
-          <label for="m-nombre"><span class="icon">🪀</span> Nombre del Cliente:</label>
+          <label for="m-nombre"><span class="icon-placeholder dynamic-emoji">✨</span> Nombre del Cliente:</label>
           <input type="text" id="m-nombre" placeholder="Nombre completo" required>
         </div>
 
         <div class="form-group">
-          <label for="m-ci"><span class="icon">🪀</span> CI:</label>
+          <label for="m-ci"><span class="icon-placeholder dynamic-emoji">✨</span> CI:</label>
           <input type="text" id="m-ci" placeholder="Carnet de Identidad" required>
         </div>
 
         <div class="form-group">
-          <label for="m-tel"><span class="icon">🪀</span> Teléfono del Cliente:</label>
+          <label for="m-tel"><span class="icon-placeholder dynamic-emoji">✨</span> Teléfono del Cliente:</label>
           <input type="text" id="m-tel" placeholder="Número de contacto" required>
         </div>
 
         <div class="form-group">
-          <label for="m-dir"><span class="icon">🪀</span> Dirección del cliente:</label>
+          <label for="m-dir"><span class="icon-placeholder dynamic-emoji">✨</span> Dirección del cliente:</label>
           <input type="text" id="m-dir" placeholder="Dirección detallada y entrecalles" required>
         </div>
 
@@ -519,12 +575,12 @@
         </div>
 
         <div class="form-group">
-          <label for="m-precio"><span class="icon">🪀</span> Precio del artículo:</label>
+          <label for="m-precio"><span class="icon-placeholder dynamic-emoji">✨</span> Precio del artículo:</label>
           <input type="text" id="m-precio" placeholder="Ej: $45 USD o 45" oninput="recalcularTotalMensajeria()" required>
         </div>
 
         <div class="form-group">
-          <label for="m-pago"><span class="icon">🪀</span> Método de pago:</label>
+          <label for="m-pago"><span class="icon-placeholder dynamic-emoji">✨</span> Método de pago:</label>
           <select id="m-pago" required>
             <option value="USD">USD</option>
             <option value="Moneda nacional 10 pesos por encima del toque">Moneda nacional 10 pesos por encima del toque</option>
@@ -533,40 +589,41 @@
         </div>
 
         <div class="form-group">
-          <label><span class="icon">🪀</span> Precio de la mensajería:</label>
+          <label><span class="icon-placeholder dynamic-emoji">✨</span> Precio de la mensajería:</label>
           <div class="input-row">
-            <input type="text" id="m-precio-mensajeria" placeholder="Cantidad (ej: 5)" oninput="recalcularTotalMensajeria()" required>
+            <input type="text" id="m-precio-mensajeria" placeholder="Cantidad (ej: 5 o 3000)" oninput="recalcularTotalMensajeria()" required>
             <select id="m-moneda-mensajeria" style="max-width: 120px;" onchange="recalcularTotalMensajeria()" required>
               <option value="USD">USD</option>
               <option value="MN">MN</option>
+              <option value="CUP">CUP</option>
               <option value="MIX">MIX</option>
             </select>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="m-total"><span class="icon">🪀</span> Total a Recoger:</label>
+          <label for="m-total"><span class="icon-placeholder dynamic-emoji">✨</span> Total a Recoger:</label>
           <input type="text" id="m-total" placeholder="Total a cobrar" required>
         </div>
 
         <div class="form-group">
-          <label for="m-devolver"><span class="icon">🪀</span> Dinero a devolver:</label>
-          <input type="text" id="m-devolver" placeholder="Cambio o 0 si exacto" required>
+          <label for="m-devolver"><span class="icon-placeholder dynamic-emoji">✨</span> Dinero a devolver:</label>
+          <input type="text" id="m-devolver" placeholder="Cambio o no / 0" value="no" required>
         </div>
 
         <div class="form-group">
-          <label for="m-gestor"><span class="icon">🪀</span> Nombre del gestor:</label>
+          <label for="m-gestor"><span class="icon-placeholder dynamic-emoji">✨</span> Nombre del gestor:</label>
           <input type="text" id="m-gestor" placeholder="Tu nombre" required>
         </div>
 
         <div class="form-group">
-          <label for="m-tel-gestor"><span class="icon">🪀</span> #De teléfono del Gestor:</label>
+          <label for="m-tel-gestor"><span class="icon-placeholder dynamic-emoji">✨</span> #De teléfono del Gestor:</label>
           <input type="text" id="m-tel-gestor" placeholder="Tu teléfono" required>
         </div>
 
         <div class="form-group">
-          <label for="m-desc-gestor"><span class="icon">🪀</span> Descontar al gestor:</label>
-          <input type="text" id="m-desc-gestor" placeholder="Monto a descontar (o Ninguno / 0)" required>
+          <label for="m-desc-gestor"><span class="icon-placeholder dynamic-emoji">✨</span> Descontar al gestor:</label>
+          <input type="text" id="m-desc-gestor" placeholder="Monto o no / 0" value="no" required>
         </div>
 
         <button type="submit" class="btn-submit btn-mensajeria">
@@ -577,21 +634,36 @@
 
     <!-- ==================== OPCIÓN 2: VALE RECOGER EN EL LOCAL ==================== -->
     <div id="view-recoger" class="vale-card" style="display:none;">
-      <h3 class="vale-header-title">📝 Factura (Recoger en el Local)</h3>
+      <div class="vale-header-title">
+        <span>📝 Factura (Recoger en el Local)</span>
+        <div class="emoji-preview-badge" onclick="rotarEmojiAleatorio()" title="Toca para cambiar emoji">
+          <span id="badge-emoji-r">✨</span>
+          <span class="text">Aleatorio</span>
+        </div>
+      </div>
+
+      <!-- Cuadro Opcional de Nota Importante -->
+      <div class="nota-card">
+        <label for="r-nota">
+          <span>⁉️</span> Nota Importante (Opcional):
+        </label>
+        <textarea id="r-nota" placeholder="Ej: pasa a recoger después de las 2:00 PM (déjalo vacío si no aplica)"></textarea>
+      </div>
+
       <form id="form-recoger" onsubmit="event.preventDefault(); procesarEnvioRecoger();">
         
         <div class="form-group">
-          <label for="r-fecha"><span class="icon">🪀</span> Fecha:</label>
+          <label for="r-fecha"><span class="icon-placeholder dynamic-emoji">✨</span> Fecha:</label>
           <input type="date" id="r-fecha" required>
         </div>
 
         <div class="form-group">
-          <label for="r-nombre"><span class="icon">🪀</span> Nombre del Cliente:</label>
+          <label for="r-nombre"><span class="icon-placeholder dynamic-emoji">✨</span> Nombre del Cliente:</label>
           <input type="text" id="r-nombre" placeholder="Nombre completo" required>
         </div>
 
         <div class="form-group">
-          <label for="r-tel"><span class="icon">🪀</span> #De teléfono del Cliente:</label>
+          <label for="r-tel"><span class="icon-placeholder dynamic-emoji">✨</span> #De teléfono del Cliente:</label>
           <input type="text" id="r-tel" placeholder="Número de contacto" required>
         </div>
 
@@ -607,12 +679,12 @@
         </div>
 
         <div class="form-group">
-          <label for="r-precio"><span class="icon">🪀</span> Precio del artículo:</label>
+          <label for="r-precio"><span class="icon-placeholder dynamic-emoji">✨</span> Precio del artículo:</label>
           <input type="text" id="r-precio" placeholder="Ej: $45 USD o 45" oninput="document.getElementById('r-total').value = this.value" required>
         </div>
 
         <div class="form-group">
-          <label for="r-pago"><span class="icon">🪀</span> Método de pago:</label>
+          <label for="r-pago"><span class="icon-placeholder dynamic-emoji">✨</span> Método de pago:</label>
           <select id="r-pago" required>
             <option value="USD">USD</option>
             <option value="Moneda nacional 10 pesos por encima del toque">Moneda nacional 10 pesos por encima del toque</option>
@@ -621,23 +693,23 @@
         </div>
 
         <div class="form-group">
-          <label for="r-total"><span class="icon">🪀</span> Total a Recoger:</label>
+          <label for="r-total"><span class="icon-placeholder dynamic-emoji">✨</span> Total a Recoger:</label>
           <input type="text" id="r-total" placeholder="Total a pagar en el local" required>
         </div>
 
         <div class="form-group">
-          <label for="r-gestor"><span class="icon">🪀</span> Nombre del gestor:</label>
+          <label for="r-gestor"><span class="icon-placeholder dynamic-emoji">✨</span> Nombre del gestor:</label>
           <input type="text" id="r-gestor" placeholder="Tu nombre" required>
         </div>
 
         <div class="form-group">
-          <label for="r-tel-gestor"><span class="icon">🪀</span> #De teléfono del Gestor:</label>
+          <label for="r-tel-gestor"><span class="icon-placeholder dynamic-emoji">✨</span> #De teléfono del Gestor:</label>
           <input type="text" id="r-tel-gestor" placeholder="Tu teléfono" required>
         </div>
 
         <div class="form-group">
-          <label for="r-direccion"><span class="icon">🪀</span> Dirección del local:</label>
-          <input type="text" id="r-direccion" placeholder="Dirección del local para recoger" value="Local Central Primera Mano" required>
+          <label for="r-direccion"><span class="icon-placeholder dynamic-emoji">✨</span> Dirección del local:</label>
+          <input type="text" id="r-direccion" value="Georgia 101 alto entre Constitución y Coliseo . Arroyo Naranjo la Palma" required>
         </div>
 
         <button type="submit" class="btn-submit btn-recoger">
@@ -678,8 +750,44 @@
   <div id="notification" class="notification"></div>
 
   <script>
-    // Enlace oficial del grupo de WhatsApp solicitado
+    // Enlace oficial del grupo de WhatsApp
     const WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/Idg5ReXzDR335vztnIvMNr";
+
+    // Más de 30 emojis serios, clásicos y comerciales
+    const EMOJIS_CLASICOS = [
+      "✨", "💫", "⭐", "🌟", "📜", "📋", "🏷️", "🔖", 
+      "💼", "👑", "⚜️", "💎", "🔹", "🔸", "🔷", "🔶", 
+      "💠", "🔺", "🔻", "▪️", "▫️", "📦", "🛍️", "🎯", 
+      "📍", "📌", "🖊️", "🖋️", "🧾", "🪙", "💳", "⚖️", 
+      "🔑", "🗂️", "🛡️", "🏷"
+    ];
+
+    let currentEmoji = "✨";
+
+    function obtenerEmojiAleatorio() {
+      const idx = Math.floor(Math.random() * EMOJIS_CLASICOS.length);
+      return EMOJIS_CLASICOS[idx];
+    }
+
+    function aplicarNuevoEmoji(emoji) {
+      currentEmoji = emoji || obtenerEmojiAleatorio();
+      document.querySelectorAll('.dynamic-emoji').forEach(el => {
+        el.textContent = currentEmoji;
+      });
+      const badgeM = document.getElementById('badge-emoji-m');
+      const badgeR = document.getElementById('badge-emoji-r');
+      if (badgeM) badgeM.textContent = currentEmoji;
+      if (badgeR) badgeR.textContent = currentEmoji;
+    }
+
+    function rotarEmojiAleatorio() {
+      let nuevo = obtenerEmojiAleatorio();
+      while (nuevo === currentEmoji) {
+        nuevo = obtenerEmojiAleatorio();
+      }
+      aplicarNuevoEmoji(nuevo);
+      mostrarToast("Icono cambiado: " + nuevo);
+    }
 
     // Inicialización al cargar la página
     document.addEventListener("DOMContentLoaded", () => {
@@ -691,6 +799,9 @@
       // Cargar items iniciales
       agregarPedidoItem('m');
       agregarPedidoItem('r');
+
+      // Seleccionar un emoji aleatorio serio para la sesión
+      aplicarNuevoEmoji();
 
       // Cargar gestor guardado si existe
       cargarDatosGestorEnFormularios();
@@ -758,11 +869,11 @@
         ${removeBtn}
         <div style="display:flex; flex-direction:column; gap:8px;">
           <div>
-            <label style="font-size:0.85rem;"><span class="icon">🪀</span> Pedido:</label>
+            <label style="font-size:0.85rem;"><span class="icon-placeholder dynamic-emoji">${currentEmoji}</span> Pedido:</label>
             <input type="text" class="dyn-pedido" placeholder="Nombre o detalle del producto" required style="padding:10px; font-size:0.95rem;">
           </div>
           <div style="width: 140px;">
-            <label style="font-size:0.85rem;"><span class="icon">🪀</span> Cantidad:</label>
+            <label style="font-size:0.85rem;"><span class="icon-placeholder dynamic-emoji">${currentEmoji}</span> Cantidad:</label>
             <input type="number" class="dyn-cant" value="1" min="1" required style="padding:10px; font-size:0.95rem;">
           </div>
         </div>
@@ -788,9 +899,9 @@
 
       if (!isNaN(numArt) && !isNaN(numMen)) {
         if (monMen === 'USD') {
-          document.getElementById('m-total').value = `$${(numArt + numMen).toFixed(0)} USD`;
+          document.getElementById('m-total').value = `${(numArt + numMen).toFixed(0)} USD`;
         } else {
-          document.getElementById('m-total').value = `$${numArt} USD + ${numMen} ${monMen}`;
+          document.getElementById('m-total').value = `${numArt} USD + ${numMen} ${monMen}`;
         }
       }
     }
@@ -846,14 +957,11 @@
       }, 3500);
     }
 
-    // ==================== REDIRECCIÓN AL GRUPO Y COPIADO ====================
+    // Redirección y copiado al portapapeles
     async function redirigirYCopiar(textoVale) {
-      // Intentar copiar al portapapeles del dispositivo
-      let copiado = false;
       try {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(textoVale);
-          copiado = true;
         } else {
           const textArea = document.createElement("textarea");
           textArea.value = textoVale;
@@ -865,19 +973,21 @@
           textArea.select();
           document.execCommand('copy');
           textArea.remove();
-          copiado = true;
         }
       } catch (err) {
         console.warn("No se pudo copiar automáticamente:", err);
       }
 
-      alert("✅ ¡Vale generado con éxito!\n\n📋 El texto del vale ha sido copiado al portapapeles.\nAhora serás redirigido al grupo oficial de WhatsApp para pegarlo y enviarlo.");
+      alert("✅ ¡Vale generado con éxito!\n\n📋 El texto del vale ha sido copiado al portapapeles con el icono " + currentEmoji + ".\nAhora serás redirigido al grupo oficial de WhatsApp.");
       
-      // Redirigir al enlace del grupo indicado por el usuario
+      // Rotar el emoji para la siguiente generación automáticamente
+      rotarEmojiAleatorio();
+
+      // Redirigir al enlace del grupo
       window.location.href = WHATSAPP_GROUP_LINK;
     }
 
-    // ==================== MODELO 1: MENSAJERÍA (TEXTO EXACTO) ====================
+    // ==================== GENERAR MENSAJERÍA ====================
     function procesarEnvioMensajeria() {
       const ids = ['m-fecha', 'm-nombre', 'm-ci', 'm-tel', 'm-dir', 'm-precio', 'm-pago', 'm-precio-mensajeria', 'm-total', 'm-devolver', 'm-gestor', 'm-tel-gestor', 'm-desc-gestor'];
       for (let i = 0; i < ids.length; i++) {
@@ -902,34 +1012,42 @@
         return;
       }
 
-      // Estructura extraída literalmente de Gitgut (web23456.github.io/1-Primera-Mano/)
+      const e = currentEmoji; // Emoji seleccionado al azar
+      const nota = document.getElementById('m-nota').value.trim();
+
       let mensaje = "📝𝐅𝐚𝐜𝐭𝐮𝐫𝐚 𝐚 𝐥𝐥𝐞𝐧𝐚𝐫 𝐩𝐨𝐫 𝐥𝐨𝐬 𝐠𝐞𝐬𝐭𝐨𝐫𝐞𝐬(𝑴𝒆𝒏𝒔𝒂𝒋𝒆𝒓í𝒂)\n\n";
-      mensaje += "🪀 𝐅𝐞𝐜𝐡𝐚: " + document.getElementById("m-fecha").value + "\n";
-      mensaje += "🪀 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐂𝐥𝐢𝐞𝐧𝐭𝐞: " + document.getElementById("m-nombre").value.trim() + "\n";
-      mensaje += "🪀 CI: " + document.getElementById("m-ci").value.trim() + "\n";
-      mensaje += "🪀 𝐓𝐞𝐥é𝐟𝐨𝐧𝐨 𝐝𝐞𝐥 𝐂𝐥𝐢𝐞𝐧𝐭𝐞: " + document.getElementById("m-tel").value.trim() + "\n";
-      mensaje += "🪀 𝐃𝐢𝐫𝐞𝐜𝐜𝐢ó𝐧 𝐝𝐞𝐥 𝐜𝐥𝐢𝐞𝐧𝐭𝐞: " + document.getElementById("m-dir").value.trim() + "\n";
+
+      // Si hay nota importante opcional, se agrega al inicio
+      if (nota) {
+        mensaje += "⁉️⁉️Importante: " + nota + " ⁉️⁉️\n\n";
+      }
+
+      mensaje += `${e} 𝐅𝐞𝐜𝐡𝐚: ` + document.getElementById("m-fecha").value + "\n";
+      mensaje += `${e} 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐂𝐥𝐢𝐞𝐧𝐭𝐞: ` + document.getElementById("m-nombre").value.trim() + "\n";
+      mensaje += `${e} CI: ` + document.getElementById("m-ci").value.trim() + "\n";
+      mensaje += `${e} 𝐓𝐞𝐥é𝐟𝐨𝐧𝐨 𝐝𝐞𝐥 𝐂𝐥𝐢𝐞𝐧𝐭𝐞: ` + document.getElementById("m-tel").value.trim() + "\n";
+      mensaje += `${e} 𝐃𝐢𝐫𝐞𝐜𝐜𝐢ó𝐧 𝐝𝐞𝐥 𝐜𝐥𝐢𝐞𝐧𝐭𝐞: ` + document.getElementById("m-dir").value.trim() + "\n";
       
       pedidoItems.forEach(item => {
         const p = item.querySelector('.dyn-pedido').value.trim();
         const c = item.querySelector('.dyn-cant').value.trim();
-        mensaje += "🪀 𝐏𝐞𝐝𝐢𝐝𝐨: " + p + "\n";
-        mensaje += "🪀 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: " + c + "\n";
+        mensaje += `${e} 𝐏𝐞𝐝𝐢𝐝𝐨: ` + p + "\n";
+        mensaje += `${e} 𝐂𝐚𝐧𝐭𝐢𝐝𝐚d: ` + c + "\n";
       });
 
-      mensaje += "🪀 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞𝐥 𝐚𝐫𝐭í𝐜𝐮𝐥𝐨: " + document.getElementById("m-precio").value.trim() + "\n";
-      mensaje += "🪀 𝐌é𝐭𝐨𝐝𝐨 𝐝𝐞 𝐩𝐚𝐠𝐨: " + document.getElementById("m-pago").value + "\n";
-      mensaje += "🪀 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞 𝐥𝐚 𝐦𝐞𝐧𝐬𝐚𝐣𝐞𝐫í𝐚: " + document.getElementById("m-precio-mensajeria").value.trim() + " " + document.getElementById("m-moneda-mensajeria").value + "\n";
-      mensaje += "🪀 𝐓𝐨𝐭𝐚𝐥 𝐚 𝐑𝐞𝐜𝐨𝐣𝐞𝐫: " + document.getElementById("m-total").value.trim() + "\n";
-      mensaje += "🪀 𝐃𝐢𝐧𝐞𝐫𝐨 𝐚 𝐝𝐞𝐯𝐨𝐥𝐯𝐞𝐫: " + document.getElementById("m-devolver").value.trim() + "\n";
-      mensaje += "🪀 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐠𝐞𝐬𝐭𝐨𝐫: " + document.getElementById("m-gestor").value.trim() + "\n";
-      mensaje += "🪀 #De teléfono del Gestor: " + document.getElementById("m-tel-gestor").value.trim() + "\n";
-      mensaje += "🪀 𝐃𝐞𝐬𝐜𝐨𝐧𝐭𝐚𝐫 𝐚𝐥 𝐠𝐞𝐬𝐭𝐨𝐫: " + document.getElementById("m-desc-gestor").value.trim() + "\n";
+      mensaje += `${e} 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞𝐥 𝐚𝐫𝐭í𝐜𝐮𝐥𝐨: ` + document.getElementById("m-precio").value.trim() + "\n";
+      mensaje += `${e} 𝐌é𝐭𝐨𝐝𝐨 𝐝𝐞 𝐩𝐚𝐠𝐨: ` + document.getElementById("m-pago").value + "\n";
+      mensaje += `${e} 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞 𝐥𝐚 𝐦𝐞𝐧𝐬𝐚𝐣𝐞𝐫í𝐚: ` + document.getElementById("m-precio-mensajeria").value.trim() + " " + document.getElementById("m-moneda-mensajeria").value + "\n";
+      mensaje += `${e} 𝐓𝐨𝐭𝐚𝐥 𝐚 𝐑𝐞𝐜𝐨𝐣𝐞𝐫: ` + document.getElementById("m-total").value.trim() + "\n";
+      mensaje += `${e} 𝐃𝐢𝐧𝐞𝐫𝐨 𝐚 𝐝𝐞𝐯𝐨𝐥𝐯𝐞𝐫: ` + document.getElementById("m-devolver").value.trim() + "\n";
+      mensaje += `${e} 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐠𝐞𝐬𝐭𝐨𝐫: ` + document.getElementById("m-gestor").value.trim() + "\n";
+      mensaje += `${e} #De teléfono del Gestor: ` + document.getElementById("m-tel-gestor").value.trim() + "\n";
+      mensaje += `${e} 𝐃𝐞𝐬𝐜𝐨𝐧𝐭𝐚𝐫 𝐚𝐥 𝐠𝐞𝐬𝐭𝐨𝐫: ` + document.getElementById("m-desc-gestor").value.trim() + "\n";
 
       redirigirYCopiar(mensaje);
     }
 
-    // ==================== MODELO 2: RECOGER EN LOCAL (TEXTO EXACTO) ====================
+    // ==================== GENERAR RECOGER EN LOCAL ====================
     function procesarEnvioRecoger() {
       const ids = ['r-fecha', 'r-nombre', 'r-tel', 'r-precio', 'r-pago', 'r-total', 'r-gestor', 'r-tel-gestor', 'r-direccion'];
       for (let i = 0; i < ids.length; i++) {
@@ -954,25 +1072,33 @@
         return;
       }
 
-      // Estructura extraída literalmente de Gitgut (web23456.github.io/1-Primera-Mano/)
+      const e = currentEmoji; // Emoji seleccionado al azar
+      const nota = document.getElementById('r-nota').value.trim();
+
       let mensaje = "📝𝐅𝐚𝐜𝐭𝐮𝐫𝐚 𝐚 𝐥𝐥𝐞𝐧𝐚𝐫 𝐩𝐨𝐫 𝐥𝐨𝐬 𝐠𝐞𝐬𝐭𝐨𝐫𝐞𝐬 (RECOGER EN EL LOCAL)\n\n";
-      mensaje += "🪀 𝐅𝐞𝐜𝐡𝐚: " + document.getElementById("r-fecha").value + "\n";
-      mensaje += "🪀 Nombre del Cliente: " + document.getElementById("r-nombre").value.trim() + "\n";
-      mensaje += "🪀 #De teléfono del Cliente: " + document.getElementById("r-tel").value.trim() + "\n";
+
+      // Si hay nota importante opcional, se agrega al inicio
+      if (nota) {
+        mensaje += "⁉️⁉️Importante: " + nota + " ⁉️⁉️\n\n";
+      }
+
+      mensaje += `${e} 𝐅𝐞𝐜𝐡𝐚: ` + document.getElementById("r-fecha").value + "\n";
+      mensaje += `${e} Nombre del Cliente: ` + document.getElementById("r-nombre").value.trim() + "\n";
+      mensaje += `${e} #De teléfono del Cliente: ` + document.getElementById("r-tel").value.trim() + "\n";
       
       pedidoItems.forEach(item => {
         const p = item.querySelector('.dyn-pedido').value.trim();
         const c = item.querySelector('.dyn-cant').value.trim();
-        mensaje += "🪀 𝐏𝐞𝐝𝐢𝐝𝐨: " + p + "\n";
-        mensaje += "🪀 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: " + c + "\n";
+        mensaje += `${e} 𝐏𝐞𝐝𝐢𝐝𝐨: ` + p + "\n";
+        mensaje += `${e} 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: ` + c + "\n";
       });
 
-      mensaje += "🪀 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞𝐥 𝐚𝐫𝐭í𝐜𝐮𝐥𝐨: " + document.getElementById("r-precio").value.trim() + "\n";
-      mensaje += "🪀 𝐌é𝐭𝐨𝐝𝐨 𝐝𝐞 𝐩𝐚𝐠𝐨: " + document.getElementById("r-pago").value + "\n";
-      mensaje += "🪀 𝐓𝐨𝐭𝐚𝐥 𝐚 𝐑𝐞𝐜𝐨𝐣𝐞𝐫: " + document.getElementById("r-total").value.trim() + "\n";
-      mensaje += "🪀 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐠𝐞𝐬𝐭𝐨𝐫: " + document.getElementById("r-gestor").value.trim() + "\n";
-      mensaje += "🪀 # De teléfono del Gestor: " + document.getElementById("r-tel-gestor").value.trim() + "\n";
-      mensaje += "\nDirección del local: " + document.getElementById("r-direccion").value.trim() + "\n";
+      mensaje += `${e} 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞𝐥 𝐚𝐫𝐭í𝐜𝐮𝐥𝐨: ` + document.getElementById("r-precio").value.trim() + "\n";
+      mensaje += `${e} 𝐌é𝐭𝐨𝐝𝐨 𝐝𝐞 𝐩𝐚𝐠𝐨: ` + document.getElementById("r-pago").value + "\n";
+      mensaje += `${e} 𝐓𝐨𝐭𝐚𝐥 𝐚 𝐑𝐞𝐜𝐨𝐣𝐞𝐫: ` + document.getElementById("r-total").value.trim() + "\n";
+      mensaje += `${e} 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐠𝐞𝐬𝐭𝐨𝐫: ` + document.getElementById("r-gestor").value.trim() + "\n";
+      mensaje += `${e} # De teléfono del Gestor: ` + document.getElementById("r-tel-gestor").value.trim() + "\n";
+      mensaje += `\nDirección del local: ` + document.getElementById("r-direccion").value.trim() + "\n";
 
       redirigirYCopiar(mensaje);
     }
