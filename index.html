@@ -612,6 +612,11 @@
       <button class="btn-gestor" onclick="abrirModalGestor()">⚙️ Mis Datos</button>
     </div>
 
+    <!-- Botón de Importar y Corregir Vales -->
+    <button type="button" onclick="abrirModalImportar()" style="width:100%; padding:14px; background: linear-gradient(135deg, #1f1b2e, #161b33); border: 2px solid var(--gold); border-radius: 12px; color: var(--gold); font-weight: 700; font-size: 1rem; cursor: pointer; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); transition: all 0.2s;">
+      📥 Importar y Corregir Vale (Inteligente)
+    </button>
+
     <!-- Selector de las 2 Opciones de Vales -->
     <div class="tabs-nav">
       <button id="tab-btn-mensajeria" class="tab-btn active-mensajeria" onclick="cambiarTipoVale('mensajeria')">
@@ -654,7 +659,7 @@
 
         <div class="form-group">
           <label for="m-ci"><span class="icon-placeholder dynamic-emoji">✨</span> CI:</label>
-          <input type="text" id="m-ci" placeholder="Carnet de Identidad" required>
+          <input type="text" id="m-ci" placeholder="Carnet de Identidad (Opcional)">
         </div>
 
         <div class="form-group">
@@ -846,6 +851,30 @@
       </div>
       <button type="button" class="btn-submit btn-recoger" onclick="guardarGestor()">
         💾 Guardar Datos
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Importar y Corregir Vale -->
+  <div id="modal-importar" class="modal-overlay">
+    <div class="modal-box" style="max-width: 580px; max-height: 90vh; overflow-y: auto;">
+      <button class="modal-close" onclick="cerrarModalImportar()">×</button>
+      <h3>📥 Importar y Corregir Vale</h3>
+      <p style="color:#aaa; font-size:0.85rem; margin-bottom:15px; text-align:center;">
+        Pega el texto del vale copiado de WhatsApp. Nuestro algoritmo limpiará la cabecera de chat, normalizará teléfonos cubanos, fechas, precios y corregirá faltas de ortografía automáticamente.
+      </p>
+      <div class="form-group">
+        <label for="import-raw-text">Texto copiado de WhatsApp:</label>
+        <textarea id="import-raw-text" style="width:100%; min-height:220px; padding:12px; border-radius:10px; border:2px solid #444; background:#181818; color:#fff; font-family:monospace; font-size:0.9rem; resize:vertical; box-sizing:border-box;" placeholder="Ejemplo:&#10;[17/10 4:37 p. m.] +53 5 1349671: 📝Factura...&#10;Fecha: 17.10.26&#10;Nombre del Cliente: ..."></textarea>
+      </div>
+
+      <div id="import-corrections-log" style="display:none; background:#111; border:1px solid #d4af37; border-radius:10px; padding:12px; margin-bottom:15px; max-height:160px; overflow-y:auto;">
+        <h4 style="color:#d4af37; font-size:0.88rem; margin-bottom:6px; font-weight:bold;">✨ Correcciones realizadas:</h4>
+        <ul id="corrections-list" style="font-size:0.8rem; color:#ddd; padding-left:18px; margin:0; line-height:1.4;"></ul>
+      </div>
+
+      <button type="button" class="btn-submit btn-recoger" onclick="procesarImportacion()">
+        ⚡ Analizar, Corregir y Cargar
       </button>
     </div>
   </div>
@@ -1207,7 +1236,7 @@
 
     // ==================== GENERAR MENSAJERÍA ====================
     function procesarEnvioMensajeria() {
-      const ids = ['m-fecha', 'm-nombre', 'm-ci', 'm-tel', 'm-dir', 'm-precio', 'm-pago', 'm-precio-mensajeria', 'm-total', 'm-devolver', 'm-gestor', 'm-tel-gestor', 'm-desc-gestor'];
+      const ids = ['m-fecha', 'm-nombre', 'm-tel', 'm-dir', 'm-precio', 'm-pago', 'm-precio-mensajeria', 'm-total', 'm-devolver', 'm-gestor', 'm-tel-gestor', 'm-desc-gestor'];
       for (let i = 0; i < ids.length; i++) {
         const val = document.getElementById(ids[i]).value.trim();
         if (!val) {
@@ -1242,7 +1271,10 @@
 
       mensaje += `${e} 𝐅𝐞𝐜𝐡𝐚: ` + document.getElementById("m-fecha").value + "\n";
       mensaje += `${e} 𝐍𝐨𝐦𝐛𝐫𝐞 𝐝𝐞𝐥 𝐂𝐥𝐢𝐞𝐧𝐭𝐞: ` + document.getElementById("m-nombre").value.trim() + "\n";
-      mensaje += `${e} CI: ` + document.getElementById("m-ci").value.trim() + "\n";
+      const ciVal = document.getElementById("m-ci").value.trim();
+      if (ciVal) {
+        mensaje += `${e} CI: ` + ciVal + "\n";
+      }
       mensaje += `${e} 𝐓𝐞𝐥é𝐟𝐨𝐧𝐨 𝐝𝐞𝐥 𝐂𝐥𝐢𝐞𝐧𝐭𝐞: ` + document.getElementById("m-tel").value.trim() + "\n";
       mensaje += `${e} 𝐃𝐢𝐫𝐞𝐜𝐜𝐢ó𝐧 𝐝𝐞𝐥 𝐜𝐥𝐢𝐞𝐧𝐭𝐞: ` + document.getElementById("m-dir").value.trim() + "\n";
       
@@ -1319,6 +1351,395 @@
       mensaje += `\nDirección del local: ` + document.getElementById("r-direccion").value.trim() + "\n";
 
       redirigirYCopiar(mensaje);
+    }
+
+    // ==================== ALGORITMO ROBUSTO DE IMPORTACIÓN Y CORRECCIÓN ====================
+    function abrirModalImportar() {
+      document.getElementById('import-raw-text').value = '';
+      document.getElementById('import-corrections-log').style.display = 'none';
+      document.getElementById('corrections-list').innerHTML = '';
+      document.getElementById('modal-importar').style.display = 'flex';
+    }
+
+    function cerrarModalImportar() {
+      document.getElementById('modal-importar').style.display = 'none';
+    }
+
+    // Convierte caracteres unicode matemáticos y en negrita a letras estándar ASCII
+    function desnormalizarTextoUnicode(str) {
+      if (!str) return '';
+      let res = '';
+      for (let i = 0; i < str.length; i++) {
+        let cp = str.codePointAt(i);
+        // Negrita Serif Mayúsculas (U+1D400 .. U+1D419) -> A..Z
+        if (cp >= 0x1D400 && cp <= 0x1D419) {
+          res += String.fromCharCode(65 + (cp - 0x1D400));
+          i++; // Surrogate pair
+        }
+        // Negrita Serif Minúsculas (U+1D41A .. U+1D433) -> a..z
+        else if (cp >= 0x1D41A && cp <= 0x1D433) {
+          res += String.fromCharCode(97 + (cp - 0x1D41A));
+          i++;
+        }
+        // Negrita Cursiva Mayúsculas (U+1D468 .. U+1D481)
+        else if (cp >= 0x1D468 && cp <= 0x1D481) {
+          res += String.fromCharCode(65 + (cp - 0x1D468));
+          i++;
+        }
+        // Negrita Cursiva Minúsculas (U+1D482 .. U+1D49B)
+        else if (cp >= 0x1D482 && cp <= 0x1D49B) {
+          res += String.fromCharCode(97 + (cp - 0x1D482));
+          i++;
+        }
+        // Cursiva Matemática
+        else if (cp >= 0x1D434 && cp <= 0x1D44D) {
+          res += String.fromCharCode(65 + (cp - 0x1D434));
+          i++;
+        }
+        else if (cp >= 0x1D44E && cp <= 0x1D467) {
+          res += String.fromCharCode(97 + (cp - 0x1D44E));
+          i++;
+        }
+        // Sans-Serif Negrita (U+1D5D4 .. U+1D607)
+        else if (cp >= 0x1D5D4 && cp <= 0x1D5ED) {
+          res += String.fromCharCode(65 + (cp - 0x1D5D4));
+          i++;
+        }
+        else if (cp >= 0x1D5EE && cp <= 0x1D607) {
+          res += String.fromCharCode(97 + (cp - 0x1D5EE));
+          i++;
+        }
+        else {
+          res += str[i];
+        }
+      }
+      return res;
+    }
+
+    // Diccionario de corrección ortográfica extraído de los patrones de Gestores
+    const DICCIONARIO_CORRECCIONES = [
+      { regex: /\bhouslex\b/gi, replacement: "houselux", note: "Corregido 'houslex' por 'houselux'" },
+      { regex: /\bhouslux\b/gi, replacement: "houselux", note: "Corregido 'houslux' por 'houselux'" },
+      { regex: /\bhuxley\b/gi, replacement: "houselux", note: "Corregido 'huxley' por 'houselux'" },
+      { regex: /\bestelectric\b/gi, replacement: "eléctrica", note: "Corregido 'estelectric' por 'eléctrica'" },
+      { regex: /\besteletric\b/gi, replacement: "eléctrica", note: "Corregido 'esteletric' por 'eléctrica'" },
+      { regex: /\belectric\b/gi, replacement: "eléctrica", note: "Corregido 'electric' por 'eléctrica'" },
+      { regex: /\binflarojo\b/gi, replacement: "infrarrojo", note: "Corregido 'inflarojo' por 'infrarrojo'" },
+      { regex: /\binflaroja\b/gi, replacement: "infrarroja", note: "Corregido 'inflaroja' por 'infrarroja'" },
+      { regex: /\binfrarojo\b/gi, replacement: "infrarrojo", note: "Corregido 'infrarojo' por 'infrarrojo'" },
+      { regex: /\bfogòn\b/gi, replacement: "fogón", note: "Corregido 'fogòn' por 'fogón'" },
+      { regex: /\bfogon\b/gi, replacement: "fogón", note: "Corregido 'fogon' por 'fogón'" },
+      { regex: /\bMuños\b/gi, replacement: "Muñoz", note: "Corregido apellido 'Muños' por 'Muñoz'" },
+      { regex: /\bcallé\b/gi, replacement: "calle", note: "Corregido 'callé' por 'calle'" },
+      { regex: /\bTransisport\b/gi, replacement: "Transimport", note: "Corregido punto de referencia 'Transimport'" },
+      { regex: /\brotaría\b/gi, replacement: "rotaria", note: "Corregido 'rotaría' por 'rotaria'" }
+    ];
+
+    function limpiarTelefonoCubano(tel) {
+      if (!tel) return '';
+      let clean = tel.replace(/^[#\s+]+/, '')
+                     .replace(/^53\s*/, '')
+                     .replace(/\s+/g, '')
+                     .replace(/[-_()]/g, '');
+      return clean;
+    }
+
+    function normalizarFecha(fechaStr) {
+      if (!fechaStr) return '';
+      let f = fechaStr.trim();
+      
+      // Formato DD.MM.YY o DD.MM.YYYY
+      let mPuntos = f.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+      if (mPuntos) {
+        let dia = mPuntos[1].padStart(2, '0');
+        let mes = mPuntos[2].padStart(2, '0');
+        let anio = mPuntos[3].length === 2 ? '20' + mPuntos[3] : mPuntos[3];
+        return `${anio}-${mes}-${dia}`;
+      }
+
+      // Formato DD/MM/YYYY o DD/MM/YY
+      let mBarras = f.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if (mBarras) {
+        let dia = mBarras[1].padStart(2, '0');
+        let mes = mBarras[2].padStart(2, '0');
+        let anio = mBarras[3].length === 2 ? '20' + mBarras[3] : mBarras[3];
+        return `${anio}-${mes}-${dia}`;
+      }
+
+      // Formato texto: "16 octubre", "17 de octubre", "17 octubre 26"
+      const meses = {
+        'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+        'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+        'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+      };
+      let fLower = f.toLowerCase();
+      for (let mesNom in meses) {
+        if (fLower.includes(mesNom)) {
+          let numDia = fLower.match(/\b(\d{1,2})\b/);
+          let dia = numDia ? numDia[1].padStart(2, '0') : '01';
+          let numAnio = fLower.match(/\b(20\d{2}|\d{2})\b/);
+          let anio = '2026';
+          if (numAnio && numAnio[1] !== numDia[1]) {
+            anio = numAnio[1].length === 2 ? '20' + numAnio[1] : numAnio[1];
+          }
+          return `${anio}-${meses[mesNom]}-${dia}`;
+        }
+      }
+
+      return f;
+    }
+
+    function procesarImportacion() {
+      const rawInput = document.getElementById('import-raw-text').value;
+      if (!rawInput.trim()) {
+        alert('⚠️ Por favor pega el texto de un vale para importar.');
+        return;
+      }
+
+      const log = [];
+      log.push('Iniciando análisis de estructura...');
+
+      // 1. Limpiar encabezados de chat de WhatsApp
+      let lineas = rawInput.split('\n');
+      let lineasLimpias = [];
+      for (let l of lineas) {
+        let lTrim = l.trim();
+        // Quitar sellos como: [17/10 4:37 p. m.] +53 5 1349671:
+        let sinWhatsApp = lTrim.replace(/^\[\d{1,2}\/\d{1,2}[^\]]+\]\s*[^:]+:\s*/i, '');
+        if (sinWhatsApp.length > 0) {
+          lineasLimpias.push(sinWhatsApp);
+        }
+      }
+      if (lineasLimpias.length < lineas.length) {
+        log.push('Detectados y removidos prefijos automáticos de WhatsApp.');
+      }
+
+      let textoTrabajo = lineasLimpias.join('\n');
+
+      // 2. Extraer Nota Importante si existe
+      let notaExtraida = '';
+      let mNota = textoTrabajo.match(/[⁉?]{2,}Importante:\s*([^⁉?\n]+)[⁉?]{2,}/i);
+      if (mNota) {
+        notaExtraida = mNota[1].trim();
+        log.push('Detectada Nota Importante: "' + notaExtraida + '"');
+      }
+
+      // 3. Detectar Modalidad: Mensajería o Recoger en Local
+      let esRecoger = /RECOGER\s+EN\s+EL\s+LOCAL/i.test(textoTrabajo);
+      let tipoVale = esRecoger ? 'recoger' : 'mensajeria';
+      log.push(`Tipo de vale detectado: ${esRecoger ? '🏪 Recoger en el Local' : '🚚 Mensajería'}`);
+
+      // 4. Normalizar unicode en todas las líneas para facilitar la búsqueda
+      let lineasNormalizadas = lineasLimpias.map(l => ({
+        original: l,
+        ascii: desnormalizarTextoUnicode(l).replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim()
+      }));
+
+      // Función auxiliar para extraer el valor de una etiqueta
+      function buscarValorCampo(etiquetasRegex) {
+        for (let item of lineasNormalizadas) {
+          for (let reg of etiquetasRegex) {
+            let m = item.ascii.match(reg);
+            if (m && m[1] !== undefined) {
+              return m[1].trim();
+            }
+          }
+        }
+        return '';
+      }
+
+      // 5. Extracción de campos clave
+      let valFecha = buscarValorCampo([/^Fecha\s*:\s*(.*)$/i]);
+      let valNombre = buscarValorCampo([/^Nombre\s+del\s+Cliente\s*:\s*(.*)$/i]);
+      let valCI = buscarValorCampo([/^CI\s*:\s*(.*)$/i, /^CI\s+(.*)$/i]);
+      let valTelCliente = buscarValorCampo([/^[#]?De\s+tel[eé]fono\s+del\s+Cliente\s*:\s*(.*)$/i, /^Tel[eé]fono\s+del\s+Cliente\s*:\s*(.*)$/i]);
+      let valDirCliente = buscarValorCampo([/^Direcci[oó]n\s+del\s+cliente\s*:\s*(.*)$/i, /^Direccion\s+del\s+cliente\s*:\s*(.*)$/i]);
+      let valPedido = buscarValorCampo([/^Pedido\s*:\s*(.*)$/i]);
+      let valCantidad = buscarValorCampo([/^Cantidad\s*:\s*(.*)$/i]);
+      let valPrecioArt = buscarValorCampo([/^Precio\s+del\s+art[ií]culo\s*:\s*(.*)$/i]);
+      let valPago = buscarValorCampo([/^M[eé]todo\s+de\s+pago\s*:\s*(.*)$/i]);
+      let valPrecioMen = buscarValorCampo([/^Precio\s+de\s+la\s+mensajer[ií]a\s*:\s*(.*)$/i]);
+      let valTotal = buscarValorCampo([/^Total\s+a\s+Recojer\s*:\s*(.*)$/i, /^Total\s+a\s+Recoger\s*:\s*(.*)$/i]);
+      let valDevolver = buscarValorCampo([/^Dinero\s+a\s+devolver\s*:\s*(.*)$/i]);
+      let valGestor = buscarValorCampo([/^Nombre\s+del\s+gestor\s*:\s*(.*)$/i]);
+      let valTelGestor = buscarValorCampo([/^[#]?De\s+tel[eé]fono\s+del\s+Gestor\s*:\s*(.*)$/i, /^Tel[eé]fono\s+del\s+Gestor\s*:\s*(.*)$/i]);
+      let valDescGestor = buscarValorCampo([/^Descontar\s+al\s+gestor\s*:\s*(.*)$/i]);
+      let valDirLocal = buscarValorCampo([/^Direcci[oó]n\s+del\s+local\s*:\s*(.*)$/i]);
+
+      // 6. Aplicar correcciones ortográficas sobre pedido, dirección y nombres
+      function aplicarOrtografia(texto) {
+        if (!texto) return '';
+        let t = texto;
+        DICCIONARIO_CORRECCIONES.forEach(rule => {
+          if (rule.regex.test(t)) {
+            t = t.replace(rule.regex, rule.replacement);
+            log.push(rule.note);
+          }
+        });
+        return t;
+      }
+
+      valPedido = aplicarOrtografia(valPedido);
+      valDirCliente = aplicarOrtografia(valDirCliente);
+      valNombre = aplicarOrtografia(valNombre);
+
+      // Limpieza de trailing "de" o caracteres sueltos en el gestor
+      if (valGestor) {
+        let gLimpio = valGestor.replace(/\s+de\s*$/i, '').trim();
+        if (gLimpio !== valGestor) {
+          log.push(`Nombre de gestor limpiado: "${valGestor}" -> "${gLimpio}"`);
+          valGestor = gLimpio;
+        }
+      }
+
+      // Normalización de teléfonos
+      let telCliLimpio = limpiarTelefonoCubano(valTelCliente);
+      if (telCliLimpio !== valTelCliente && valTelCliente) {
+        log.push(`Teléfono cliente corregido: ${valTelCliente} -> ${telCliLimpio}`);
+        valTelCliente = telCliLimpio;
+      }
+
+      let telGestLimpio = limpiarTelefonoCubano(valTelGestor);
+      if (telGestLimpio !== valTelGestor && valTelGestor) {
+        log.push(`Teléfono gestor corregido: ${valTelGestor} -> ${telGestLimpio}`);
+        valTelGestor = telGestLimpio;
+      }
+
+      // Normalización de fecha
+      let fechaNorm = normalizarFecha(valFecha);
+      if (fechaNorm !== valFecha && valFecha) {
+        log.push(`Fecha normalizada a formato estándar: ${valFecha} -> ${fechaNorm}`);
+        valFecha = fechaNorm;
+      }
+
+      // Si devolver o descontar están vacíos o dicen nada, poner "no"
+      if (!valDevolver.trim() || valDevolver.toLowerCase() === 'ninguno') {
+        valDevolver = 'no';
+      }
+      if (!valDescGestor.trim()) {
+        valDescGestor = 'no';
+      }
+
+      // 7. Volcar datos en el formulario correspondiente
+      cambiarTipoVale(tipoVale);
+
+      const pref = tipoVale === 'mensajeria' ? 'm' : 'r';
+
+      if (notaExtraida) {
+        document.getElementById(`${pref}-nota`).value = notaExtraida;
+      }
+      if (valFecha) {
+        document.getElementById(`${pref}-fecha`).value = valFecha;
+      }
+      if (valNombre) {
+        document.getElementById(`${pref}-nombre`).value = valNombre;
+      }
+      if (tipoVale === 'mensajeria') {
+        document.getElementById('m-ci').value = valCI;
+        if (!valCI) {
+          log.push('Campo CI vacío (se mantiene como Opcional)');
+        }
+      }
+      if (valTelCliente) {
+        document.getElementById(`${pref}-tel`).value = valTelCliente;
+      }
+
+      // Artículos / Pedidos: separar si vienen múltiples artículos por comas o saltos
+      const pedContainer = document.getElementById(`${pref}-pedidos-container`);
+      pedContainer.innerHTML = '';
+
+      let listaArticulos = [];
+      if (valPedido.includes(',') || valPedido.includes('\n')) {
+        let rawParts = valPedido.split(/[,\n]/).map(p => p.trim()).filter(p => p.length > 0);
+        listaArticulos = rawParts;
+        log.push(`Detectados múltiples artículos en el pedido (${listaArticulos.length})`);
+      } else if (valPedido) {
+        listaArticulos = [valPedido];
+      } else {
+        listaArticulos = ['Artículo'];
+      }
+
+      // Cantidades
+      let listaCantidades = [];
+      if (valCantidad) {
+        let cParts = valCantidad.split(/[,y\s]+/).filter(x => /^\d+$/.test(x));
+        listaCantidades = cParts;
+      }
+
+      listaArticulos.forEach((art, idx) => {
+        agregarPedidoItem(pref);
+        const itemsDom = pedContainer.querySelectorAll('.pedido-item');
+        const ultimo = itemsDom[itemsDom.length - 1];
+        if (ultimo) {
+          ultimo.querySelector('.dyn-pedido').value = art;
+          if (listaCantidades[idx]) {
+            ultimo.querySelector('.dyn-cant').value = listaCantidades[idx];
+          }
+        }
+      });
+
+      if (valPrecioArt) {
+        document.getElementById(`${pref}-precio`).value = valPrecioArt;
+      }
+
+      // Método de pago selector
+      if (valPago) {
+        let pSel = document.getElementById(`${pref}-pago`);
+        let pVal = valPago.toLowerCase();
+        if (pVal.includes('nacional') || pVal.includes('cup') || pVal.includes('toque')) {
+          pSel.value = 'Moneda nacional 10 pesos por encima del toque';
+        } else if (pVal.includes('mix')) {
+          pSel.value = 'Mixta USD MN';
+        } else {
+          pSel.value = 'USD';
+        }
+      }
+
+      if (tipoVale === 'mensajeria') {
+        if (valDirCliente) document.getElementById('m-dir').value = valDirCliente;
+        
+        // Precio y moneda de mensajería
+        if (valPrecioMen) {
+          let numMen = valPrecioMen.match(/\d[\d\s.,]*/);
+          if (numMen) {
+            document.getElementById('m-precio-mensajeria').value = numMen[0].replace(/\s+/g, '');
+          }
+          if (/cup|mn/i.test(valPrecioMen)) {
+            document.getElementById('m-moneda-mensajeria').value = 'CUP';
+          } else if (/usd/i.test(valPrecioMen)) {
+            document.getElementById('m-moneda-mensajeria').value = 'USD';
+          }
+        }
+
+        if (valTotal) document.getElementById('m-total').value = valTotal;
+        document.getElementById('m-devolver').value = valDevolver;
+        if (valDescGestor) document.getElementById('m-desc-gestor').value = valDescGestor;
+      } else {
+        if (valTotal) document.getElementById('r-total').value = valTotal;
+        if (valDirLocal) {
+          document.getElementById('r-direccion').value = valDirLocal;
+        }
+      }
+
+      if (valGestor) document.getElementById(`${pref}-gestor`).value = valGestor;
+      if (valTelGestor) document.getElementById(`${pref}-tel-gestor`).value = valTelGestor;
+
+      // Mostrar log de correcciones en modal
+      const cLog = document.getElementById('import-corrections-log');
+      const cList = document.getElementById('corrections-list');
+      cList.innerHTML = '';
+      log.forEach(item => {
+        let li = document.createElement('li');
+        li.textContent = item;
+        cList.appendChild(li);
+      });
+      cLog.style.display = 'block';
+
+      setTimeout(() => {
+        cerrarModalImportar();
+        mostrarToast('✅ ¡Vale importado y corregido con éxito!');
+        window.scrollTo({ top: 180, behavior: 'smooth' });
+      }, 1600);
     }
   </script>
 </body>

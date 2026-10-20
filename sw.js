@@ -1,5 +1,5 @@
 // Versión de caché dinámica: cada vez que actualices el código, cambia este número
-const CACHE_VERSION = 'v2.0.0';
+const CACHE_VERSION = 'v2.1.0';
 const CACHE_NAME = `vales-primera-mano-${CACHE_VERSION}`;
 
 const ASSETS_TO_CACHE = [
