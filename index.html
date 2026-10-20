@@ -878,11 +878,10 @@
 
       <!-- Sección de Memoria Multicapa: Notas y Tarifas de Mensajería -->
       <div style="margin-top: 15px; border-top: 1px dashed rgba(212, 175, 55, 0.4); padding-top: 12px;">
-        <label for="g-notas-gestor" style="color:var(--gold); font-size:0.92rem; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-          <span>📋 Tarifas & Notas Guardadas (Memoria Multicapa):</span>
-          <button type="button" onclick="cargarPlantillaTarifas()" style="background:transparent; border:1px solid var(--gold); color:var(--gold); font-size:0.75rem; padding:2px 8px; border-radius:6px; cursor:pointer;">Cargar Tarifas Oficiales</button>
+        <label for="g-notas-gestor" style="color:var(--gold); font-size:0.92rem; margin-bottom:6px; display:block;">
+          📋 Tarifas & Notas Guardadas (Memoria Multicapa):
         </label>
-        <textarea id="g-notas-gestor" style="width:100%; min-height:160px; padding:10px; border-radius:8px; border:1px solid #444; background:#1c1c1c; color:#eee; font-family:monospace; font-size:0.85rem; resize:vertical; box-sizing:border-box;" placeholder="Pega aquí tus tarifas de mensajerías o notas de trabajo..."></textarea>
+        <textarea id="g-notas-gestor" style="width:100%; min-height:160px; padding:10px; border-radius:8px; border:1px solid #444; background:#1c1c1c; color:#eee; font-family:monospace; font-size:0.85rem; resize:vertical; box-sizing:border-box;" placeholder="Pega aquí tus tarifas de mensajería, zonas o notas personales de trabajo..."></textarea>
       </div>
 
       <button type="button" class="btn-submit btn-recoger" onclick="guardarGestor()">
@@ -1301,106 +1300,15 @@
       }
     }
 
-    const TARIFAS_MENSAJERIA_DEFAULT = `Tarifas de mensajerías 
-
-• Vedado 💰- 1700
-• Ciudad Deportiva 💰- 1650
-• Cerro 💰- 1900
-• Centro Habana 💰- 1500
-• Habana Vieja 💰- 2000
-• Avenida 26 💰- 1900
-
-• Playa💰 - 2000
-• Náutico💰- 2500
-• Siboney💰- 3000
-• Jaimanitas💰- 3500
-• Santa Fe💰- 4000
-• después de Santa Fe 5000
-
-Marianao💰- 2500
-La Lisa 💰- 2600
-El hueco-2500
-San Agustín💰-3000
-• La Coronela 💰- 3000
-• Alturas de la Lisa💰- 3000
-• Arroyo Arenas 💰- 3500
-• Novia del Mediodía 💰-3500
-• El Cano 💰- 3500
-• Punta Brava 💰- principio 4000, y pueblo para adentro 5000
-
-Uci 💰- 4000
-
-Boyeros
-• 100 y Vento 💰1500
-• Cujae 💰3000
-• Fontanar 💰3000
-• Parque Lenin 💰2500
-• Calabazar 💰2500
-• Aeropuerto-Mazorra 💰-3500
-• Managua 💰4000
-• Wajay 💰-3000
-• Mulgoba 💰-3500
-• Santiago de las Vegas💰- 4000
-
-Arroyo Naranjo
-• Víbora Park:1000
-• La Palma 💰- 1000
-• Miraflores 💰- 2000
-• Vieja Linda 💰- 1500
-• Mantilla 💰- 1500
-• Calvario 💰- 1800
-• Párraga 💰- 1500 
-• Capri 💰- 1800
-• Eléctrico 💰-1800
-
-Diez de Octubre 
-• Santo Suárez💰-1200
-• Luyanó 💰- 1200
-• Lawton 💰-1200
-• Víbora Park💰-1000
-
-San Miguel del Padrón
-. Virgen del camino 💰- 1800
-• Virgen del Camino hasta Avenida 4ta (Luyanó Moderno)💰- 2000
-• Caballo Blanco💰- 1500
-• La Cuevita💰- 2500
-• Diezmero💰- 2500
-• San Francisco de Paula💰- 3000
-
-Cotorro
-• Puente del Cotorro💰- 2500
-• Centro de Cotorro💰- 3000
-• Alberro💰- 3300
-Lo último del cotorro 4000
-4 camino:5000
-
-Guanabacoa💰- 2000 principio 2500 centro y 4000 final
-Minas de guanabacoa💰- 5000 dependiendo la zona.
-Regla 2000
-Reparto Camilo Cienfuegos💰- 2500
-Casa Blanca💰- 3000
-Reparto Chivás💰- 2500
-Bahía💰- 2500
-Cojímar💰- 3000
-
-Alamar 💰- 3000
-Guanabo💰- 5000
-Campo florido💰-6500`;
-
-    function cargarPlantillaTarifas() {
-      document.getElementById('g-notas-gestor').value = TARIFAS_MENSAJERIA_DEFAULT;
-      mostrarToast("📋 Tarifas oficiales cargadas.");
-    }
-
     // Modal de Gestor y LocalStorage con Memoria Multicapa (LocalStorage + Fallback)
     function abrirModalGestor() {
       document.getElementById('g-nombre').value = localStorage.getItem('gestor_nombre') || '';
       document.getElementById('g-ci').value = localStorage.getItem('gestor_ci') || '';
       document.getElementById('g-tel').value = localStorage.getItem('gestor_tel') || '';
       
-      let notasGuardadas = localStorage.getItem('gestor_notas_tarifas');
-      if (!notasGuardadas) {
-        notasGuardadas = TARIFAS_MENSAJERIA_DEFAULT;
+      let notasGuardadas = localStorage.getItem('gestor_notas_tarifas') || '';
+      if (!notasGuardadas && window.sessionStorage) {
+        notasGuardadas = sessionStorage.getItem('gestor_notas_tarifas_backup') || '';
       }
       document.getElementById('g-notas-gestor').value = notasGuardadas;
 
@@ -1417,8 +1325,8 @@ Campo florido💰-6500`;
       if (!contenido && window.sessionStorage) {
         contenido = sessionStorage.getItem('gestor_notas_tarifas_backup');
       }
-      if (!contenido) {
-        contenido = TARIFAS_MENSAJERIA_DEFAULT;
+      if (!contenido || !contenido.trim()) {
+        contenido = "ℹ️ Aún no has guardado información sobre tarifas o notas.\n\nPuedes pegarlas y guardarlas en cualquier momento pulsando en '⚙️ Mis Datos'.";
       }
       document.getElementById('texto-tarifas-display').textContent = contenido;
       document.getElementById('modal-ver-tarifas').style.display = 'flex';
