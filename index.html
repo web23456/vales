@@ -1479,12 +1479,28 @@
       mensaje += `${e} 𝐓𝐞𝐥é𝐟𝐨𝐧𝐨 𝐝𝐞𝐥 𝐂𝐥𝐢𝐞𝐧𝐭𝐞: ` + document.getElementById("m-tel").value.trim() + "\n";
       mensaje += `${e} 𝐃𝐢𝐫𝐞𝐜𝐜𝐢ó𝐧 𝐝𝐞𝐥 𝐜𝐥𝐢𝐞𝐧𝐭𝐞: ` + document.getElementById("m-dir").value.trim() + "\n";
       
+      // Formato agrupado: "1 Ventilador de pared, 2 cocina infrarroja, 1 ventilador de pedestal"
+      // y "Cantidad: 1, 2, 1"
+      let arrPedidosTexto = [];
+      let arrCantidadesTexto = [];
+
       pedidoItems.forEach(item => {
-        const p = item.querySelector('.dyn-pedido').value.trim();
-        const c = item.querySelector('.dyn-cant').value.trim();
-        mensaje += `${e} 𝐏𝐞𝐝𝐢𝐝𝐨: ` + p + "\n";
-        mensaje += `${e} 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: ` + c + "\n";
+        let p = item.querySelector('.dyn-pedido').value.trim();
+        let c = item.querySelector('.dyn-cant').value.trim();
+        // Quitar comas sobrantes al final de cada nombre de producto
+        p = p.replace(/,+$/, '').trim();
+        
+        // Si el usuario ya le había puesto el número al inicio (ej: "1 Ventilador..."), no duplicar
+        if (/^\d+\s+/i.test(p)) {
+          arrPedidosTexto.push(p);
+        } else {
+          arrPedidosTexto.push(`${c} ${p}`);
+        }
+        arrCantidadesTexto.push(c);
       });
+
+      mensaje += `${e} 𝐏𝐞𝐝𝐢𝐝𝐨: ` + arrPedidosTexto.join(', ') + "\n";
+      mensaje += `${e} 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: ` + arrCantidadesTexto.join(', ') + "\n";
 
       mensaje += `${e} 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞𝐥 𝐚𝐫𝐭í𝐜𝐮𝐥𝐨: ` + document.getElementById("m-precio").value.trim() + "\n";
       mensaje += `${e} 𝐌é𝐭𝐨𝐝𝐨 𝐝𝐞 𝐩𝐚𝐠𝐨: ` + document.getElementById("m-pago").value + "\n";
@@ -1537,12 +1553,28 @@
       mensaje += `${e} Nombre del Cliente: ` + document.getElementById("r-nombre").value.trim() + "\n";
       mensaje += `${e} #De teléfono del Cliente: ` + document.getElementById("r-tel").value.trim() + "\n";
       
+      // Formato agrupado: "1 Ventilador de pared, 2 cocina infrarroja, 1 ventilador de pedestal"
+      // y "Cantidad: 1, 2, 1"
+      let arrPedidosTexto = [];
+      let arrCantidadesTexto = [];
+
       pedidoItems.forEach(item => {
-        const p = item.querySelector('.dyn-pedido').value.trim();
-        const c = item.querySelector('.dyn-cant').value.trim();
-        mensaje += `${e} 𝐏𝐞𝐝𝐢𝐝𝐨: ` + p + "\n";
-        mensaje += `${e} 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: ` + c + "\n";
+        let p = item.querySelector('.dyn-pedido').value.trim();
+        let c = item.querySelector('.dyn-cant').value.trim();
+        // Quitar comas sobrantes al final de cada nombre de producto
+        p = p.replace(/,+$/, '').trim();
+        
+        // Si el usuario ya le había puesto el número al inicio (ej: "1 Ventilador..."), no duplicar
+        if (/^\d+\s+/i.test(p)) {
+          arrPedidosTexto.push(p);
+        } else {
+          arrPedidosTexto.push(`${c} ${p}`);
+        }
+        arrCantidadesTexto.push(c);
       });
+
+      mensaje += `${e} 𝐏𝐞𝐝𝐢𝐝𝐨: ` + arrPedidosTexto.join(', ') + "\n";
+      mensaje += `${e} 𝐂𝐚𝐧𝐭𝐢𝐝𝐚𝐝: ` + arrCantidadesTexto.join(', ') + "\n";
 
       mensaje += `${e} 𝐏𝐫𝐞𝐜𝐢𝐨 𝐝𝐞𝐥 𝐚𝐫𝐭í𝐜𝐮𝐥𝐨: ` + document.getElementById("r-precio").value.trim() + "\n";
       mensaje += `${e} 𝐌é𝐭𝐨𝐝𝐨 𝐝𝐞 𝐩𝐚𝐠𝐨: ` + document.getElementById("r-pago").value + "\n";
